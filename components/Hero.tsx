@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 
 export const Hero: React.FC = () => {
   return (
-    <div className="relative pt-24 pb-12 md:pt-32 md:pb-20">
+    <div className="relative pt-36 pb-12 md:pt-44 md:pb-20">
       <div className="container mx-auto px-6 md:px-12">
         
         {/* Search Bar - Airbnb Style */}
