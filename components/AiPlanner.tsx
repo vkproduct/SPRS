@@ -1,135 +1,82 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send } from 'lucide-react';
-import { generateWeddingAdvice } from '../services/geminiService';
-import { ChatMessage } from '../types';
+import React from 'react';
+import { Calculator, Users, CheckSquare, Clock, PieChart, Armchair, ChevronRight } from 'lucide-react';
 
 export const AiPlanner: React.FC = () => {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Zdravo! Ja sam vaš AI asistent. Mogu vam pomoći da procenite budžet, nađete salu ili osmislite dekoraciju.' }
-  ]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
-
-    const userMsg = input;
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setLoading(true);
-
-    const response = await generateWeddingAdvice(userMsg);
-    
-    setMessages(prev => [...prev, { role: 'model', text: response }]);
-    setLoading(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  const tools = [
+    {
+      icon: <Calculator size={28} />,
+      title: "Online kalkulator troškova",
+      desc: "Kontrolišite budžet venčanja i pratite svaku uplatu."
+    },
+    {
+      icon: <Armchair size={28} />,
+      title: "Plan rasporeda sedenja",
+      desc: "Rasporedite goste za stolove jednostavno prevlačenjem."
+    },
+    {
+      icon: <CheckSquare size={28} />,
+      title: "Lista svadbenih obaveza",
+      desc: "Ne propustite nijednu sitnicu uz detaljan vodič."
+    },
+    {
+      icon: <Clock size={28} />,
+      title: "Satnica (Tajming)",
+      desc: "Isplanirajte scenario venčanja minut po minut."
+    },
+    {
+      icon: <Users size={28} />,
+      title: "Lista gostiju",
+      desc: "Jednostavni filteri, statusi pozivnica i statistika."
     }
-  };
+  ];
 
   return (
-    <section className="py-20 bg-airbnb-bg border-t border-gray-100">
+    <section className="py-24 bg-airbnb-bg border-t border-gray-100" id="planer">
       <div className="container mx-auto px-6 md:px-12">
         
-        <div className="flex flex-col lg:flex-row gap-16 items-start">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-airbnb-dark mb-6 tracking-tight">
+            Vaš lični <span className="text-primary">Planer</span>
+          </h2>
+          <p className="text-lg text-airbnb-gray leading-relaxed">
+            Sve što vam je potrebno za organizaciju savršenog dana na jednom mestu. 
+            Potpuno besplatni alati za mladence.
+          </p>
+        </div>
+
+        {/* Tools Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          {/* Text Content */}
-          <div className="lg:w-1/2 pt-4">
-            <div className="text-primary font-bold text-3xl md:text-5xl mb-6 tracking-tight">
-              Svadbeni<span className="text-airbnb-dark">Planer</span>
+          {tools.map((tool, index) => (
+            <div 
+              key={index} 
+              className="bg-white p-8 rounded-2xl shadow-card hover:shadow-floating transition-all duration-300 cursor-pointer group border border-transparent hover:border-gray-100 relative overflow-hidden"
+            >
+              <div className="mb-6 inline-flex p-4 rounded-full bg-airbnb-bg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                {tool.icon}
+              </div>
+              <h3 className="text-xl font-bold text-airbnb-dark mb-3 group-hover:text-primary transition-colors">
+                {tool.title}
+              </h3>
+              <p className="text-airbnb-gray leading-relaxed font-light text-[15px]">
+                {tool.desc}
+              </p>
             </div>
-            <h2 className="text-2xl md:text-3xl font-medium text-airbnb-dark mb-6">
-              Sveobuhvatna pomoć u svakom trenutku.
-            </h2>
-            <p className="text-lg text-airbnb-gray mb-8 leading-relaxed">
-              Uz našu AI tehnologiju, dobijate odgovore na pitanja o budžetu, tradiciji i organizaciji brže nego ikad. Kao da imate ličnog konsultanta dostupnog 24/7.
-            </p>
-            <button className="border border-airbnb-dark text-airbnb-dark hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition-colors">
-              Saznajte više
-            </button>
-          </div>
+          ))}
 
-          {/* Chat Interface */}
-          <div className="lg:w-1/2 w-full">
-            <div className="bg-white rounded-2xl shadow-floating border border-gray-200 overflow-hidden h-[600px] flex flex-col">
-              {/* Chat Header */}
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                <div className="font-bold text-lg text-airbnb-dark">Asistent</div>
-                <Sparkles size={18} className="text-primary" />
-              </div>
-
-              {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`
-                      max-w-[85%] px-5 py-4 text-[15px] leading-relaxed rounded-2xl
-                      ${msg.role === 'user' 
-                        ? 'bg-airbnb-dark text-white rounded-br-sm' 
-                        : 'bg-airbnb-bg text-airbnb-dark border border-gray-100 rounded-bl-sm'}
-                    `}>
-                      {msg.role === 'model' ? (
-                         <div dangerouslySetInnerHTML={{ 
-                           __html: msg.text
-                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                             .replace(/\n/g, '<br />')
-                             .replace(/- /g, '• ') 
-                         }} />
-                      ) : (
-                        msg.text
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex justify-start">
-                    <div className="bg-airbnb-bg px-4 py-3 rounded-2xl border border-gray-100">
-                      <div className="flex gap-1.5">
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div className="p-4 bg-white border-t border-gray-100">
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Pošaljite poruku..."
-                    className="w-full bg-airbnb-bg border border-gray-300 rounded-full pl-6 pr-12 py-3.5 outline-none focus:border-airbnb-dark focus:ring-1 focus:ring-airbnb-dark transition-all text-airbnb-dark font-medium"
-                    disabled={loading}
-                  />
-                  <button 
-                    onClick={handleSend}
-                    disabled={loading || !input.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-full hover:opacity-90 disabled:opacity-50 disabled:bg-gray-300 transition-all"
-                  >
-                    <Send size={16} fill="currentColor" />
-                  </button>
-                </div>
-              </div>
+          {/* Call to Action Card */}
+          <div className="bg-gradient-to-br from-primary to-[#D80565] p-8 rounded-2xl shadow-card flex flex-col justify-center items-start text-white relative overflow-hidden group cursor-pointer">
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-3">Započnite odmah</h3>
+              <p className="text-white/90 mb-8 font-light">Kreirajte nalog i pristupite svim alatima besplatno.</p>
+              <button className="bg-white text-primary px-6 py-3 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+                Registracija <ChevronRight size={16} />
+              </button>
             </div>
+            
+            {/* Decorative background circle */}
+            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           </div>
 
         </div>
