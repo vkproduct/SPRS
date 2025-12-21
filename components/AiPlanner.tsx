@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Users, CheckSquare, Clock, PieChart, Armchair, ChevronRight } from 'lucide-react';
+import { Calculator, Users, CheckSquare, Clock, Armchair, ChevronRight } from 'lucide-react';
 
 export const AiPlanner: React.FC = () => {
   const tools = [

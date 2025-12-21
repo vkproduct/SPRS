@@ -1,14 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getClient = () => {
-  // Support for standard process.env (Webpack/CRA) and import.meta.env (Vite)
-  // Note: For Vite, you typically need variables to start with VITE_
-  // For CRA, they need to start with REACT_APP_
-  const apiKey = 
-    process.env.API_KEY || 
-    process.env.REACT_APP_API_KEY || 
-    process.env.VITE_API_KEY ||
-    (import.meta as any).env?.VITE_API_KEY;
+  let apiKey;
+  
+  // Safe check for process.env (Node/Webpack)
+  if (typeof process !== 'undefined' && process.env) {
+      apiKey = process.env.API_KEY || process.env.REACT_APP_API_KEY || process.env.VITE_API_KEY;
+  }
+  
+  // Safe check for import.meta.env (Vite)
+  if (!apiKey && (import.meta as any).env) {
+      apiKey = (import.meta as any).env.VITE_API_KEY;
+  }
 
   if (!apiKey) {
     console.error("CRITICAL: API_KEY is missing. Please create a .env file based on .env.example");

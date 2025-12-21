@@ -3,7 +3,6 @@ import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, Che
 
 export const ForPartners: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [formState, setFormState] = useState({ name: '', category: '', city: '', phone: '', email: '' });
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);

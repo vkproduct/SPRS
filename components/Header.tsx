@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Globe, User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { ViewType } from '../App';
 
 interface HeaderProps {
@@ -126,11 +126,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
                 Za mladence
               </div>
             )}
-            {/* Right Actions
-            <div className="header__language-btn hover:bg-gray-100 p-3 rounded-full cursor-pointer transition-all">
-              <Globe size={18} />
-            </div>
-             */}
             
             {/* User Menu Pill */}
             <div className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">
