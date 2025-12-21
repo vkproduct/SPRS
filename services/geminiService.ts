@@ -1,17 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
+  // Support for standard process.env (Webpack/CRA) and import.meta.env (Vite)
+  // Note: For Vite, you typically need variables to start with VITE_
+  // For CRA, they need to start with REACT_APP_
+  const apiKey = 
+    process.env.API_KEY || 
+    process.env.REACT_APP_API_KEY || 
+    process.env.VITE_API_KEY ||
+    (import.meta as any).env?.VITE_API_KEY;
+
   if (!apiKey) {
-    console.error("API_KEY is missing from environment variables.");
+    console.error("CRITICAL: API_KEY is missing. Please create a .env file based on .env.example");
     return null;
   }
+  
   return new GoogleGenAI({ apiKey });
 };
 
 export const generateWeddingAdvice = async (userPrompt: string): Promise<string> => {
   const client = getClient();
-  if (!client) return "Izvinite, AI servis trenutno nije dostupan. Proverite API ključ.";
+  if (!client) return "Konfiguracija nije pronađena. Molimo proverite API ključ u .env fajlu.";
 
   try {
     const response = await client.models.generateContent({
