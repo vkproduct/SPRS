@@ -31,52 +31,52 @@ export const AiPlanner: React.FC = () => {
   ];
 
   return (
-    <section className="py-24 bg-airbnb-bg border-t border-gray-100" id="planer">
-      <div className="container mx-auto px-6 md:px-12">
+    <section className="planner py-24 bg-portal-bg border-t border-gray-100" id="planer">
+      <div className="planner__container container mx-auto px-6 md:px-12">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-airbnb-dark mb-6 tracking-tight">
+        <div className="planner__header text-center max-w-3xl mx-auto mb-16">
+          <h2 className="planner__title text-3xl md:text-5xl font-bold text-portal-dark mb-6 tracking-tight">
             Vaš lični <span className="text-primary">Planer</span>
           </h2>
-          <p className="text-lg text-airbnb-gray leading-relaxed">
+          <p className="planner__description text-lg text-portal-gray leading-relaxed">
             Sve što vam je potrebno za organizaciju savršenog dana na jednom mestu. 
             Potpuno besplatni alati za mladence.
           </p>
         </div>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="planner__grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {tools.map((tool, index) => (
             <div 
               key={index} 
-              className="bg-white p-8 rounded-2xl shadow-card hover:shadow-floating transition-all duration-300 cursor-pointer group border border-transparent hover:border-gray-100 relative overflow-hidden"
+              className="tool-card bg-white p-8 rounded-2xl shadow-card hover:shadow-floating transition-all duration-300 cursor-pointer group border border-transparent hover:border-gray-100 relative overflow-hidden"
             >
-              <div className="mb-6 inline-flex p-4 rounded-full bg-airbnb-bg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <div className="tool-card__icon mb-6 inline-flex p-4 rounded-full bg-portal-bg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                 {tool.icon}
               </div>
-              <h3 className="text-xl font-bold text-airbnb-dark mb-3 group-hover:text-primary transition-colors">
+              <h3 className="tool-card__title text-xl font-bold text-portal-dark mb-3 group-hover:text-primary transition-colors">
                 {tool.title}
               </h3>
-              <p className="text-airbnb-gray leading-relaxed font-light text-[15px]">
+              <p className="tool-card__desc text-portal-gray leading-relaxed font-light text-[15px]">
                 {tool.desc}
               </p>
             </div>
           ))}
 
           {/* Call to Action Card */}
-          <div className="bg-gradient-to-br from-primary to-[#D80565] p-8 rounded-2xl shadow-card flex flex-col justify-center items-start text-white relative overflow-hidden group cursor-pointer">
-            <div className="relative z-10">
-              <h3 className="text-2xl font-bold mb-3">Započnite odmah</h3>
-              <p className="text-white/90 mb-8 font-light">Kreirajte nalog i pristupite svim alatima besplatno.</p>
-              <button className="bg-white text-primary px-6 py-3 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+          <div className="cta-card bg-gradient-to-br from-primary to-[#D80565] p-8 rounded-2xl shadow-card flex flex-col justify-center items-start text-white relative overflow-hidden group cursor-pointer">
+            <div className="cta-card__content relative z-10">
+              <h3 className="cta-card__title text-2xl font-bold mb-3">Započnite odmah</h3>
+              <p className="cta-card__text text-white/90 mb-8 font-light">Kreirajte nalog i pristupite svim alatima besplatno.</p>
+              <button className="cta-card__button bg-white text-primary px-6 py-3 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Registracija <ChevronRight size={16} />
               </button>
             </div>
             
             {/* Decorative background circle */}
-            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="cta-card__bg-circle absolute -right-6 -bottom-6 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           </div>
 
         </div>

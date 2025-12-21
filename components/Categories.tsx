@@ -15,38 +15,38 @@ const categories: VendorCategory[] = [
 
 export const Categories: React.FC = () => {
   return (
-    <section className="py-12 bg-white" id="kategorije">
-      <div className="container mx-auto px-6 md:px-12">
-        <h2 className="text-3xl font-bold text-airbnb-dark mb-8">Istražite kategorije</h2>
+    <section className="categories py-12 bg-white" id="kategorije">
+      <div className="categories__container container mx-auto px-6 md:px-12">
+        <h2 className="categories__title text-3xl font-bold text-portal-dark mb-8">Istražite kategorije</h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+        <div className="categories__grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
           {categories.map((cat) => (
-            <div key={cat.id} className="group cursor-pointer">
+            <div key={cat.id} className="category-card group cursor-pointer">
               {/* Image Container */}
-              <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100">
+              <div className="category-card__image-container relative aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100">
                 <img 
                   src={cat.image} 
                   alt={cat.name} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="category-card__image w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-3 right-3 text-white/70 hover:text-white hover:scale-110 transition-all">
+                <div className="category-card__like absolute top-3 right-3 text-white/70 hover:text-white hover:scale-110 transition-all">
                   <Heart fill="rgba(0,0,0,0.5)" strokeWidth={0} size={24} className="absolute inset-0 text-black/20" />
                   <Heart size={24} className="relative drop-shadow-sm" />
                 </div>
               </div>
               
               {/* Content */}
-              <div className="flex justify-between items-start">
+              <div className="category-card__content flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-airbnb-dark text-[15px]">{cat.name}</h3>
-                  <p className="text-airbnb-gray text-[15px]">Veliki izbor</p>
+                  <h3 className="category-card__title font-semibold text-portal-dark text-[15px]">{cat.name}</h3>
+                  <p className="category-card__subtitle text-portal-gray text-[15px]">Veliki izbor</p>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="font-semibold text-airbnb-dark text-sm">{cat.count}</span>
-                    <span className="text-airbnb-dark text-sm">provajdera</span>
+                    <span className="category-card__count font-semibold text-portal-dark text-sm">{cat.count}</span>
+                    <span className="text-portal-dark text-sm">provajdera</span>
                   </div>
                 </div>
                 {/* Rating star simulation */}
-                <div className="flex items-center gap-1 text-sm font-light">
+                <div className="category-card__rating flex items-center gap-1 text-sm font-light">
                    <span className="text-xs">★</span> 4.9
                 </div>
               </div>

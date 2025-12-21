@@ -40,27 +40,27 @@ export const Header: React.FC = () => {
 
   return (
     <header 
-      className={`fixed w-full z-50 transition-all duration-300 bg-white border-b border-gray-100 flex flex-col`}
+      className={`header fixed w-full z-50 transition-all duration-300 bg-white border-b border-gray-100 flex flex-col`}
     >
       {/* Preheader Countdown */}
-      <div className="bg-airbnb-dark text-white text-xs md:text-sm py-2.5 text-center font-medium tracking-wide">
-        <span className="opacity-90 mr-2">Pozivamo profesionalce da nam se pridruže! Otvaranje za:</span>
-        <span className="font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
+      <div className="header__preheader bg-portal-dark text-white text-xs md:text-sm py-2.5 text-center font-medium tracking-wide">
+        <span className="header__preheader-text opacity-90 mr-2">Pozivamo profesionalce da nam se pridruže! Otvaranje za:</span>
+        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
           {timeLeft.days} d
         </span>
-        <span className="font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
+        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
           {timeLeft.hours.toString().padStart(2, '0')} h
         </span>
-        <span className="font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
+        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
           {timeLeft.minutes.toString().padStart(2, '0')} m
         </span>
       </div>
 
-      <div className={`w-full transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
-        <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
+      <div className={`header__main w-full transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
+        <div className="header__container container mx-auto px-6 md:px-12 flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center gap-2 flex-1 cursor-pointer group">
-            <span className="text-primary transition-transform group-hover:scale-105 duration-300">
+          <div className="header__logo flex items-center gap-2 flex-1 cursor-pointer group">
+            <span className="header__logo-icon text-primary transition-transform group-hover:scale-105 duration-300">
                {/* Connected Wedding Rings Logo */}
                <svg 
                  viewBox="0 0 42 32" 
@@ -83,29 +83,29 @@ export const Header: React.FC = () => {
                  <circle cx="28" cy="16" r="9" />
                </svg>
             </span>
-            <span className="text-primary font-bold text-xl hidden md:block tracking-tight">svadbeniportal.rs</span>
+            <span className="header__logo-text text-primary font-bold text-xl hidden md:block tracking-tight">SvadbeniPortal.rs</span>
           </div>
 
           {/* Center Nav */}
-          <div className={`hidden md:flex gap-6 items-center transition-all`}>
-             <button className="font-medium text-airbnb-dark hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Smeštaj</button>
-             <button className="font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Doživljaji</button>
-             <button className="font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Online</button>
+          <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
+             <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Smeštaj</button>
+             <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Doživljaji</button>
+             <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Online</button>
           </div>
 
           {/* Right Actions */}
-          <div className="flex-1 flex justify-end items-center gap-2">
-            <div className="hidden md:block font-medium text-sm hover:bg-gray-100 px-4 py-3 rounded-full cursor-pointer transition-all">
+          <div className="header__actions flex-1 flex justify-end items-center gap-2">
+            <div className="header__action-btn hidden md:block font-medium text-sm hover:bg-gray-100 px-4 py-3 rounded-full cursor-pointer transition-all">
               Za biznise
             </div>
-            <div className="hover:bg-gray-100 p-3 rounded-full cursor-pointer transition-all">
+            <div className="header__language-btn hover:bg-gray-100 p-3 rounded-full cursor-pointer transition-all">
               <Globe size={18} />
             </div>
             
             {/* User Menu Pill */}
-            <div className="flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">
+            <div className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">
               <Menu size={18} className="text-gray-600" />
-              <div className="bg-gray-500 text-white p-1 rounded-full">
+              <div className="header__user-avatar bg-gray-500 text-white p-1 rounded-full">
                  <User size={18} fill="currentColor" className="text-white" />
               </div>
             </div>
