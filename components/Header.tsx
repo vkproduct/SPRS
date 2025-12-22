@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
           {/* Logo */}
           <div onClick={handleLogoClick} className="header__logo flex items-center gap-2 flex-1 cursor-pointer group">
             <span className="header__logo-icon text-primary transition-transform group-hover:scale-105 duration-300">
-               {/* Connected Wedding Rings Logo */}
+               {/* Connected Wedding Rings Logo - Keeping as symbol of celebration connection */}
                <svg 
                  viewBox="0 0 42 32" 
                  xmlns="http://www.w3.org/2000/svg" 
@@ -97,15 +97,15 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
                  <circle cx="28" cy="16" r="9" />
                </svg>
             </span>
-            <span className="header__logo-text text-primary font-bold text-xl hidden md:block tracking-tight">SvadbeniPortal.rs</span>
+            <span className="header__logo-text text-primary font-bold text-xl hidden md:block tracking-tight">SveZaProslavu.rs</span>
           </div>
 
           {/* Center Nav - Only show on Home view */}
           {currentView === 'home' && (
             <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
-              <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Smeštaj</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Doživljaji</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Online</button>
+              <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Prostori</button>
+              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Usluge</button>
+              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Inspiracija</button>
             </div>
           )}
 
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
                 onClick={handleLogoClick}
                 className="header__action-btn hidden md:block font-medium text-sm hover:bg-gray-100 px-4 py-3 rounded-full cursor-pointer transition-all"
               >
-                Za mladence
+                Tražim uslugu
               </div>
             )}
             

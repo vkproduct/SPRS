@@ -20,7 +20,7 @@ export const LeadForm: React.FC = () => {
             Ponudite svoje usluge na portalu
           </h2>
           <p className="lead-form__text text-lg font-light text-gray-300 mb-8 max-w-lg">
-            Pridružite se zajednici najboljih fotografa, restorana i dekoratera. Iskoristite priliku za besplatnu promociju tokom lansiranja.
+            Imate restoran, salu za proslave, bend, fotografsku agenciju ili poslastičarnicu? Pridružite se zajednici najboljih i popunite svoje termine.
           </p>
           <div className="lead-form__divider h-1 w-20 bg-white rounded-full"></div>
         </div>

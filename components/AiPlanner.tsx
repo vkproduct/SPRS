@@ -5,28 +5,28 @@ export const AiPlanner: React.FC = () => {
   const tools = [
     {
       icon: <Calculator size={28} />,
-      title: "Online kalkulator troškova",
-      desc: "Kontrolišite budžet venčanja i pratite svaku uplatu."
+      title: "Kalkulator budžeta",
+      desc: "Kontrolišite troškove proslave i pratite svaku uplatu."
     },
     {
       icon: <Armchair size={28} />,
-      title: "Plan rasporeda sedenja",
+      title: "Raspored sedenja",
       desc: "Rasporedite goste za stolove jednostavno prevlačenjem."
     },
     {
       icon: <CheckSquare size={28} />,
-      title: "Lista svadbenih obaveza",
+      title: "Lista obaveza",
       desc: "Ne propustite nijednu sitnicu uz detaljan vodič."
     },
     {
       icon: <Clock size={28} />,
-      title: "Satnica (Tajming)",
-      desc: "Isplanirajte scenario venčanja minut po minut."
+      title: "Scenario proslave",
+      desc: "Isplanirajte tok događaja minut po minut."
     },
     {
       icon: <Users size={28} />,
-      title: "Lista gostiju",
-      desc: "Jednostavni filteri, statusi pozivnica i statistika."
+      title: "Lista zvanica",
+      desc: "Evidencija gostiju, statusi pozivnica i potvrde dolaska."
     }
   ];
 
@@ -40,8 +40,7 @@ export const AiPlanner: React.FC = () => {
             Vaš lični <span className="text-primary">Planer</span>
           </h2>
           <p className="planner__description text-lg text-portal-gray leading-relaxed">
-            Sve što vam je potrebno za organizaciju savršenog dana na jednom mestu. 
-            Potpuno besplatni alati za mladence.
+            Bilo da organizujete svadbu, punoletstvo ili krštenje - naši besplatni alati će vam olakšati organizaciju.
           </p>
         </div>
 
@@ -68,7 +67,7 @@ export const AiPlanner: React.FC = () => {
           {/* Call to Action Card */}
           <div className="cta-card bg-gradient-to-br from-primary to-[#D80565] p-8 rounded-2xl shadow-card flex flex-col justify-center items-start text-white relative overflow-hidden group cursor-pointer">
             <div className="cta-card__content relative z-10">
-              <h3 className="cta-card__title text-2xl font-bold mb-3">Započnite odmah</h3>
+              <h3 className="cta-card__title text-2xl font-bold mb-3">Organizujte lako</h3>
               <p className="cta-card__text text-white/90 mb-8 font-light">Kreirajte nalog i pristupite svim alatima besplatno.</p>
               <button className="cta-card__button bg-white text-primary px-6 py-3 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Registracija <ChevronRight size={16} />

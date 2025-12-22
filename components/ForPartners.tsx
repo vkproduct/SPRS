@@ -21,7 +21,7 @@ export const ForPartners: React.FC = () => {
       {/* SECTION 1: HERO */}
       <section className="partner-hero relative bg-portal-dark text-white py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-20">
-           <img src="https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Wedding bg" className="w-full h-full object-cover" />
+           <img src="https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Event bg" className="w-full h-full object-cover" />
         </div>
         
         <div className="partner-hero__container container mx-auto px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-12">
@@ -31,16 +31,16 @@ export const ForPartners: React.FC = () => {
               🚀 Prvih 100 partnera dobija bonuse
             </div>
             <h1 className="partner-hero__title text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Popunite kalendar venčanjima tokom <span className="text-primary">cele godine</span>
+              Popunite kalendar proslavama tokom <span className="text-primary">cele godine</span>
             </h1>
             <p className="partner-hero__subtitle text-lg md:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed">
-              Ne dozvolite da mladenci odu konkurenciji. Primajte kvalitetne upite svakog dana bez trošenja novca na neefikasne reklame.
+              Venčanja, rođendani, korporativne žurke. Primajte kvalitetne upite svakog dana bez trošenja novca na neefikasne reklame.
             </p>
             
             <div className="partner-hero__trust flex flex-wrap gap-4 text-sm font-medium text-gray-400">
               <div className="flex items-center gap-2"><CheckCircle size={16} className="text-primary" /> Besplatno zauvek</div>
               <div className="flex items-center gap-2"><CheckCircle size={16} className="text-primary" /> Bez provizije</div>
-              <div className="flex items-center gap-2"><CheckCircle size={16} className="text-primary" /> 5 min za podešavanje</div>
+              <div className="flex items-center gap-2"><CheckCircle size={16} className="text-primary" /> Sve vrste proslava</div>
             </div>
           </div>
 
@@ -56,10 +56,10 @@ export const ForPartners: React.FC = () => {
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kategorija</label>
                     <select className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none bg-gray-50">
                         <option value="">Izaberite uslugu...</option>
-                        <option value="venue">Restoran / Sala</option>
-                        <option value="photo">Fotograf</option>
-                        <option value="music">Muzika / Bend</option>
-                        <option value="decor">Dekoracija</option>
+                        <option value="venue">Restoran / Sala / Igraonica</option>
+                        <option value="photo">Fotograf / Video</option>
+                        <option value="music">Muzika / Bend / DJ</option>
+                        <option value="decor">Dekoracija / Torte</option>
                         <option value="other">Ostalo</option>
                     </select>
                 </div>
@@ -88,12 +88,12 @@ export const ForPartners: React.FC = () => {
         <div className="container mx-auto px-6 md:px-12">
             <div className="text-center max-w-3xl mx-auto mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold text-portal-dark mb-4">Da li vam ovo zvuči poznato?</h2>
-                <p className="text-portal-gray">Izazovi sa kojima se suočava 90% svadbenih profesionalaca u Srbiji.</p>
+                <p className="text-portal-gray">Izazovi sa kojima se suočava 90% ugostitelja i agencija u Srbiji.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
-                    { title: "Sezonski padovi", text: "Leti ste prebukirani, a zimi kalendar ostaje prazan i prihodi padaju." },
+                    { title: "Prazni termini", text: "Vikendi su puni, ali radni dani ostaju prazni. Teško je naći korporativne klijente." },
                     { title: "Skupa reklama", text: "Instagram i Facebook 'jedu' budžet, a rezultati su često nepredvidivi." },
                     { title: "Previše pitanja", text: "Gubite sate odgovarajući na poruke 'pošto je', a malo ko rezerviše." },
                     { title: "Jaka konkurencija", text: "Teško je istaći se kada klijenti gledaju samo ko nudi nižu cenu." }
@@ -112,7 +112,7 @@ export const ForPartners: React.FC = () => {
       <section className="partner-solution py-20 bg-white">
         <div className="container mx-auto px-6 md:px-12">
             <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-portal-dark mb-4">Samo 3 koraka do prvog klijenta</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-portal-dark mb-4">Samo 3 koraka do novih klijenata</h2>
             </div>
             
             <div className="flex flex-col md:flex-row items-start justify-between gap-8 relative">
@@ -121,7 +121,7 @@ export const ForPartners: React.FC = () => {
 
                 {[
                     { icon: Users, title: "1. Kreirajte profil", desc: "Besplatno dodajte slike, opis usluga i cene. Traje manje od 15 minuta.", time: "15 min" },
-                    { icon: Star, title: "2. Primajte upite", desc: "Mladenci vas pronalaze putem pametne pretrage i šalju direktne zahteve.", time: "Automatski" },
+                    { icon: Star, title: "2. Primajte upite", desc: "Klijenti vas pronalaze za svadbe, rođendane i proslave i šalju zahteve.", time: "Automatski" },
                     { icon: DollarSign, title: "3. Zatvorite posao", desc: "Dogovorite detalje direktno sa klijentom i naplatite svoju uslugu 100%.", time: "Vaša magija" }
                 ].map((step, idx) => (
                     <div key={idx} className="flex-1 flex flex-col items-center text-center bg-white">
@@ -142,8 +142,8 @@ export const ForPartners: React.FC = () => {
         <div className="container mx-auto px-6 md:px-12">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16">
                 {[
-                    { icon: TrendingUp, title: "Više klijenata bez reklame", desc: "Mladenci traže baš vas. Pojavljujete se u pravom trenutku kada su spremni da rezervišu." },
-                    { icon: Calendar, title: "Pun kalendar cele godine", desc: "Zaboravite na mrtve sezone. Portal radi 24/7 i donosi klijente koji planiraju unapred." },
+                    { icon: TrendingUp, title: "Više klijenata bez reklame", desc: "Slavljenici traže baš vas. Pojavljujete se u pravom trenutku kada su spremni da rezervišu." },
+                    { icon: Calendar, title: "Pun kalendar cele godine", desc: "Kombinujte venčanja vikendom i korporativne proslave radnim danima." },
                     { icon: Shield, title: "Samo ozbiljni upiti", desc: "Bez spama. Klijenti vide vaše cene i uslove pre nego što vas kontaktiraju." },
                     { icon: Star, title: "Reputacija radi za vas", desc: "Jedan dobar utisak donosi deset novih preporuka kroz naš sistem ocenjivanja." },
                     { icon: TrendingUp, title: "Statistika i uvid", desc: "Pratite koliko ljudi gleda vaš profil i šta ih najviše interesuje." },
@@ -171,8 +171,8 @@ export const ForPartners: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
                     { name: "Marija Petrović", role: "Svadbeni fotograf, Beograd", quote: "Ranije sam zavisila od Instagrama, sada mi 70% klijenata dolazi preko portala. Najbolja odluka za moj biznis.", result: "+24 upita/mes", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" },
-                    { name: "Restoran 'Zlatni Dvor'", role: "Novi Sad", quote: "Popunili smo termine za sledeću godinu brže nego ikada. Panel za upravljanje je veoma jednostavan.", result: "Kalendar 90% pun", image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=200&q=80" },
-                    { name: "DJ Marko", role: "Niš", quote: "Sviđa mi se što su klijenti ozbiljni. Nema gubljenja vremena, odmah prelazimo na dogovor.", result: "0€ troška reklame", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" }
+                    { name: "Restoran 'Zlatni Dvor'", role: "Novi Sad", quote: "Popunili smo termine za proslave firmi radnim danima zahvaljujući portalu.", result: "Kalendar 90% pun", image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=200&q=80" },
+                    { name: "DJ Marko", role: "Niš", quote: "Sviđa mi se što su klijenti ozbiljni. Radim svadbe, ali i 18. rođendane preko sajta.", result: "0€ troška reklame", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" }
                 ].map((item, idx) => (
                     <div key={idx} className="bg-gray-50 p-8 rounded-2xl relative">
                         <div className="flex items-center gap-4 mb-6">
@@ -269,11 +269,11 @@ export const ForPartners: React.FC = () => {
             
             <div className="space-y-4">
                 {[
-                    { q: "Zašto bih plaćao ako već imam Instagram?", a: "Instagram je odličan za inspiraciju, ali SvadbeniPortal donosi 'tople' klijente koji su spremni da kupe. Ovde ljudi dolaze sa namerom da rezervišu, a ne da samo gledaju slike." },
+                    { q: "Zašto bih plaćao ako već imam Instagram?", a: "Instagram je odličan za inspiraciju, ali SveZaProslavu.rs donosi 'tople' klijente koji su spremni da kupe. Ovde ljudi dolaze sa namerom da organizuju događaj." },
                     { q: "Šta ako ne dobijem nijedan upit?", a: "Besplatni nalog nema vremensko ograničenje, tako da nemate rizik. Za plaćene pakete nudimo 14 dana probnog perioda - ako niste zadovoljni, otkažite jednim klikom." },
                     { q: "Da li uzimate proviziju od mojih poslova?", a: "Ne! Zarada od klijenata je 100% vaša. Mi naplaćujemo samo fiksnu mesečnu pretplatu za korišćenje platforme (ili ništa, ako ste na besplatnom planu)." },
                     { q: "Koliko vremena treba za održavanje profila?", a: "Samo 15-20 minuta za inicijalno postavljanje. Nakon toga, samo odgovarate na upite koji vam stižu. Nema potrebe za stalnim objavljivanjem kao na društvenim mrežama." },
-                    { q: "Ja sam iz manjeg grada, da li to radi?", a: "Apsolutno! U manjim mestima je konkurencija manja, pa ćete verovatno biti prvi izbor za sve mlade iz vašeg kraja." }
+                    { q: "Ja sam iz manjeg grada, da li to radi?", a: "Apsolutno! U manjim mestima je konkurencija manja, pa ćete verovatno biti prvi izbor za sve proslave u vašem kraju." }
                 ].map((faq, idx) => (
                     <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
                         <button 

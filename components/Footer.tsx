@@ -10,32 +10,33 @@ export const Footer: React.FC = () => {
             <h4 className="footer__title font-bold mb-4">Podrška</h4>
             <ul className="footer__list space-y-3 font-light">
               <li><a href="#" className="footer__link hover:underline">Centar za pomoć</a></li>
-              <li><a href="#" className="footer__link hover:underline">AirCover</a></li>
+              <li><a href="#" className="footer__link hover:underline">AirCover za proslave</a></li>
               <li><a href="#" className="footer__link hover:underline">Opcije otkazivanja</a></li>
               <li><a href="#" className="footer__link hover:underline">Naš tim</a></li>
             </ul>
           </div>
           <div className="footer__column">
-            <h4 className="footer__title font-bold mb-4">Mladenci</h4>
+            <h4 className="footer__title font-bold mb-4">Organizacija</h4>
             <ul className="footer__list space-y-3 font-light">
-              <li><a href="#" className="footer__link hover:underline">Katalog sala</a></li>
+              <li><a href="#" className="footer__link hover:underline">Katalog prostora</a></li>
               <li><a href="#" className="footer__link hover:underline">AI Planer</a></li>
               <li><a href="#" className="footer__link hover:underline">Inspiracija</a></li>
+              <li><a href="#" className="footer__link hover:underline">Magazin</a></li>
             </ul>
           </div>
           <div className="footer__column">
             <h4 className="footer__title font-bold mb-4">Biznis</h4>
             <ul className="footer__list space-y-3 font-light">
               <li><a href="#" className="footer__link hover:underline">Postavite svoj oglas</a></li>
-              <li><a href="#" className="footer__link hover:underline">Osiguranje za domaćine</a></li>
-              <li><a href="#" className="footer__link hover:underline">Resursi</a></li>
+              <li><a href="#" className="footer__link hover:underline">Marketing rešenja</a></li>
+              <li><a href="#" className="footer__link hover:underline">Resursi za partnere</a></li>
             </ul>
           </div>
         </div>
 
         <div className="footer__bottom border-t border-gray-200 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-portal-dark">
           <div className="footer__copyright flex flex-wrap gap-2 md:gap-4 font-light">
-            <span>© 2024 SvadbeniPortal.rs</span>
+            <span>© 2024 SveZaProslavu.rs</span>
             <span className="hidden md:inline">·</span>
             <a href="#" className="footer__link hover:underline">Privatnost</a>
             <span className="hidden md:inline">·</span>
