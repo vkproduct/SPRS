@@ -42,7 +42,7 @@ export const Hero: React.FC = () => {
         {/* Hero Image Card */}
         <div className="hero__image-card relative rounded-3xl overflow-hidden h-[500px] md:h-[600px] w-full shadow-sm">
           <img 
-            src="https://images.unsplash.com/photo-1519225421980-715cb0202128?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+            src="https://images.unsplash.com/photo-1688493904228-f6bd305c542d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
             alt="Celebration background" 
             className="w-full h-full object-cover"
           />

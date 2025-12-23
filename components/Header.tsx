@@ -72,32 +72,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
 
       <div className={`header__main w-full transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
         <div className="header__container container mx-auto px-6 md:px-12 flex justify-between items-center">
-          {/* Logo */}
-          <div onClick={handleLogoClick} className="header__logo flex items-center gap-2 flex-1 cursor-pointer group">
-            <span className="header__logo-icon text-primary transition-transform group-hover:scale-105 duration-300">
-               {/* Connected Wedding Rings Logo - Keeping as symbol of celebration connection */}
-               <svg 
-                 viewBox="0 0 42 32" 
-                 xmlns="http://www.w3.org/2000/svg" 
-                 aria-hidden="true" 
-                 role="presentation" 
-                 focusable="false" 
-                 style={{
-                   display: 'block', 
-                   height: '32px', 
-                   width: 'auto', 
-                   fill: 'none', 
-                   stroke: 'currentColor', 
-                   strokeWidth: '3.5',
-                   strokeLinecap: 'round',
-                   strokeLinejoin: 'round'
-                 }}
-               >
-                 <circle cx="14" cy="16" r="9" />
-                 <circle cx="28" cy="16" r="9" />
-               </svg>
-            </span>
-            <span className="header__logo-text text-primary font-bold text-xl hidden md:block tracking-tight">SveZaProslavu.rs</span>
+          {/* Logo - Typographic Wordmark in Brand Color */}
+          <div onClick={handleLogoClick} className="header__logo flex items-center flex-1 cursor-pointer group select-none">
+            <div className="flex items-baseline transition-opacity hover:opacity-80">
+                <span className="font-black text-2xl md:text-3xl tracking-tighter text-primary">
+                  SveZaProslavu
+                </span>
+                <span className="text-primary/60 font-bold text-lg md:text-xl tracking-tight ml-0.5">.rs</span>
+            </div>
           </div>
 
           {/* Center Nav - Only show on Home view */}
