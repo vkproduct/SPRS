@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
 
         <div className="footer__bottom border-t border-gray-200 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-portal-dark">
           <div className="footer__copyright flex flex-wrap gap-2 md:gap-4 font-light">
-            <span>© 2024 SveZaProslavu.rs</span>
+            <span>© 2025 SveZaProslavu.rs</span>
             <span className="hidden md:inline">·</span>
             <a href="#" className="footer__link hover:underline">Privatnost</a>
             <span className="hidden md:inline">·</span>
