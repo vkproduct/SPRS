@@ -17,10 +17,13 @@ export const LeadForm: React.FC = () => {
         
         <div className="lead-form__info md:w-1/2">
           <h2 className="lead-form__title text-4xl md:text-5xl font-bold mb-6">
-            Ponudite svoje usluge na portalu
+            Partnerstvo za ugostitelje i agencije
           </h2>
+          <h3 className="text-xl font-medium text-gray-200 mb-4">
+            Ponudite svoje usluge na najvećem portalu za proslave u Srbiji
+          </h3>
           <p className="lead-form__text text-lg font-light text-gray-300 mb-8 max-w-lg">
-            Imate restoran, salu za proslave, bend, fotografsku agenciju ili poslastičarnicu? Pridružite se zajednici najboljih i popunite svoje termine.
+            Imate restoran, salu za proslave, bend, fotografsku agenciju ili poslastičarnicu? Pridružite se zajednici najboljih i popunite svoje termine tokom cele godine.
           </p>
           <div className="lead-form__divider h-1 w-20 bg-white rounded-full"></div>
         </div>
@@ -28,7 +31,7 @@ export const LeadForm: React.FC = () => {
         <div className="lead-form__card md:w-1/2 w-full bg-white text-portal-dark rounded-2xl p-8 shadow-2xl">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="lead-form__form flex flex-col gap-4">
-              <h3 className="lead-form__form-title text-xl font-bold mb-2">Prijavite se za rani pristup</h3>
+              <div className="lead-form__form-title text-xl font-bold mb-2">Prijavite se za rani pristup</div>
               <div className="lead-form__input-group flex flex-col gap-1">
                 <label className="lead-form__label text-xs font-bold text-gray-500 uppercase">Email adresa</label>
                 <input 
@@ -52,7 +55,7 @@ export const LeadForm: React.FC = () => {
             <div className="lead-form__success py-10 text-center">
               <div className="lead-form__success-icon text-primary text-5xl mb-4">✓</div>
               <h3 className="lead-form__success-title text-2xl font-bold mb-2">Hvala vam!</h3>
-              <p className="lead-form__success-text text-gray-500">Kontaktiraćemo vas uskoro sa detaljima.</p>
+              <p className="lead-form__success-text text-gray-500">Kontaktiraćemo vas uskoro sa detaljima za partnere.</p>
             </div>
           )}
         </div>

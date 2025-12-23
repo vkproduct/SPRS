@@ -5,28 +5,28 @@ export const AiPlanner: React.FC = () => {
   const tools = [
     {
       icon: <Calculator size={28} />,
-      title: "Kalkulator budžeta",
-      desc: "Kontrolišite troškove proslave i pratite svaku uplatu."
+      title: "Kalkulator budžeta proslave",
+      desc: "Kontrolišite troškove venčanja, rođendana ili eventa i pratite svaku uplatu."
     },
     {
       icon: <Armchair size={28} />,
-      title: "Raspored sedenja",
-      desc: "Rasporedite goste za stolove jednostavno prevlačenjem."
+      title: "Raspored sedenja gostiju",
+      desc: "Idealno za svadbe i gala večere. Rasporedite goste prevlačenjem."
     },
     {
       icon: <CheckSquare size={28} />,
-      title: "Lista obaveza",
-      desc: "Ne propustite nijednu sitnicu uz detaljan vodič."
+      title: "Lista obaveza za organizaciju",
+      desc: "Ne propustite nijednu sitnicu uz detaljan vodič korak po korak."
     },
     {
       icon: <Clock size={28} />,
-      title: "Scenario proslave",
-      desc: "Isplanirajte tok događaja minut po minut."
+      title: "Scenario događaja i satnica",
+      desc: "Isplanirajte tok proslave minut po minut za savršen dan."
     },
     {
       icon: <Users size={28} />,
-      title: "Lista zvanica",
-      desc: "Evidencija gostiju, statusi pozivnica i potvrde dolaska."
+      title: "Lista zvanica i pozivnice",
+      desc: "Evidencija gostiju, statusi pozivnica i potvrde dolaska (RSVP)."
     }
   ];
 
@@ -37,10 +37,10 @@ export const AiPlanner: React.FC = () => {
         {/* Header */}
         <div className="planner__header text-center max-w-3xl mx-auto mb-16">
           <h2 className="planner__title text-3xl md:text-5xl font-bold text-portal-dark mb-6 tracking-tight">
-            Vaš lični <span className="text-primary">Planer</span>
+            Besplatni <span className="text-primary">Online Planer</span> za svadbe, rođendane i događaje
           </h2>
           <p className="planner__description text-lg text-portal-gray leading-relaxed">
-            Bilo da organizujete svadbu, punoletstvo ili krštenje - naši besplatni alati će vam olakšati organizaciju.
+            Bilo da organizujete veliku svadbu, 18. rođendan ili korporativni događaj - naši pametni alati štede vaše vreme i novac.
           </p>
         </div>
 
@@ -68,7 +68,7 @@ export const AiPlanner: React.FC = () => {
           <div className="cta-card bg-gradient-to-br from-primary to-[#D80565] p-8 rounded-2xl shadow-card flex flex-col justify-center items-start text-white relative overflow-hidden group cursor-pointer">
             <div className="cta-card__content relative z-10">
               <h3 className="cta-card__title text-2xl font-bold mb-3">Organizujte lako</h3>
-              <p className="cta-card__text text-white/90 mb-8 font-light">Kreirajte nalog i pristupite svim alatima besplatno.</p>
+              <p className="cta-card__text text-white/90 mb-8 font-light">Kreirajte nalog i pristupite alatima za bilo koju vrstu proslave.</p>
               <button className="cta-card__button bg-white text-primary px-6 py-3 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Registracija <ChevronRight size={16} />
               </button>

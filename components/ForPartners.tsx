@@ -34,7 +34,7 @@ export const ForPartners: React.FC = () => {
               Popunite kalendar proslavama tokom <span className="text-primary">cele godine</span>
             </h1>
             <p className="partner-hero__subtitle text-lg md:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed">
-              Venčanja, rođendani, korporativne žurke. Primajte kvalitetne upite svakog dana bez trošenja novca na neefikasne reklame.
+              Venčanja, rođendani, korporativne žurke. Primajte kvalitetne upite svakog dana bez trošenja novca na veoma skupo reklame.
             </p>
             
             <div className="partner-hero__trust flex flex-wrap gap-4 text-sm font-medium text-gray-400">

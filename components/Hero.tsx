@@ -22,7 +22,7 @@ export const Hero: React.FC = () => {
 
             <div className="hero__search-item flex-1 px-8 py-3 hover:bg-gray-100 rounded-full cursor-pointer relative group">
               <label className="block text-xs font-bold text-portal-dark">Povod</label>
-              <div className="text-sm text-gray-500 truncate">Venčanje, Rođendan...</div>
+              <div className="text-sm text-gray-500 truncate">Svadba, Rođendan, Firma...</div>
               <div className="absolute right-0 top-3 bottom-3 w-[1px] bg-gray-200 group-hover:hidden"></div>
             </div>
 
@@ -31,7 +31,7 @@ export const Hero: React.FC = () => {
                 <label className="block text-xs font-bold text-portal-dark">Broj gostiju</label>
                 <div className="text-sm text-gray-500 truncate">Dodajte broj ljudi</div>
               </div>
-              <div className="hero__search-button bg-primary text-white p-4 rounded-full hover:bg-rose-600 transition-colors shadow-sm">
+              <div className="hero__search-button bg-primary text-white p-4 rounded-full hover:bg-rose-600 transition-colors shadow-sm" aria-label="Pretraži">
                 <Search size={20} strokeWidth={2.5} />
               </div>
             </div>
@@ -43,18 +43,18 @@ export const Hero: React.FC = () => {
         <div className="hero__image-card relative rounded-3xl overflow-hidden h-[500px] md:h-[600px] w-full shadow-sm">
           <img 
             src="https://images.unsplash.com/photo-1688493904228-f6bd305c542d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-            alt="Celebration background" 
+            alt="Srećni ljudi na proslavi - Organizacija venčanja, rođendana i korporativnih događaja u Srbiji" 
             className="w-full h-full object-cover"
           />
           <div className="hero__overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16 text-white">
-            <h1 className="hero__title text-4xl md:text-6xl font-bold mb-4 max-w-3xl leading-tight">
-              Organizujte proslavu za pamćenje
+            <h1 className="hero__title text-4xl md:text-6xl font-bold mb-4 max-w-5xl leading-tight">
+              Organizacija svih vrsta proslava u Srbiji: Od venčanja do korporativnih događaja
             </h1>
-            <p className="hero__subtitle text-lg font-medium mb-8 max-w-lg text-gray-100">
-              Venčanja, rođendani, krštenja i korporativne proslave. Pronađite idealan prostor, muziku i dekoraciju na jednom mestu.
-            </p>
+            <h2 className="hero__subtitle text-lg font-medium mb-8 max-w-2xl text-gray-100">
+              Pronađite idealan prostor i usluge za vaše venčanje, 18. rođendan, krštenje ili proslavu firme. Kreirajte uspomene koje traju zauvek.
+            </h2>
             <button className="hero__cta bg-white text-portal-dark hover:bg-gray-100 font-bold px-8 py-4 rounded-full transition-colors w-fit shadow-md">
-              Istraži ponudu
+              Istraži ponudu prostora
             </button>
           </div>
         </div>
@@ -65,7 +65,7 @@ export const Hero: React.FC = () => {
             <Search className="text-primary" />
             <div>
               <div className="font-bold text-sm">Šta slavimo?</div>
-              <div className="text-xs text-gray-500">Pronađite prostor i usluge</div>
+              <div className="text-xs text-gray-500">Venčanje, Rođendan, Firma...</div>
             </div>
           </div>
         </div>

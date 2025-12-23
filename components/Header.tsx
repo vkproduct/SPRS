@@ -75,19 +75,19 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
           {/* Logo - Typographic Wordmark in Brand Color */}
           <div onClick={handleLogoClick} className="header__logo flex items-center flex-1 cursor-pointer group select-none">
             <div className="flex items-baseline transition-opacity hover:opacity-80">
-                <span className="font-black text-2xl md:text-3xl tracking-tighter text-primary">
+                <span className="font-poppins font-semibold text-2xl md:text-3xl tracking-tight text-primary uppercase">
                   SveZaProslavu
                 </span>
-                <span className="text-primary/60 font-bold text-lg md:text-xl tracking-tight ml-0.5">.rs</span>
+                <span className="font-poppins text-primary/60 font-semibold text-lg md:text-xl tracking-tight ml-0.5">.rs</span>
             </div>
           </div>
 
           {/* Center Nav - Only show on Home view */}
           {currentView === 'home' && (
             <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
-              <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Prostori</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Usluge</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition-all">Inspiracija</button>
+              <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Prostori</button>
+              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2  text-sm rounded-full transition-all">Usluge</button>
+              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Inspiracija</button>
             </div>
           )}
 
