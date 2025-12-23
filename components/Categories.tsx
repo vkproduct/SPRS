@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Heart } from 'lucide-react';
 import { VendorCategory } from '../types';
@@ -13,7 +14,11 @@ const categories: VendorCategory[] = [
   { id: '8', name: 'Pozivnice', iconName: 'Gift', count: 20, image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80' },
 ];
 
-export const Categories: React.FC = () => {
+interface CategoriesProps {
+  onCategoryClick?: (categoryId: string) => void;
+}
+
+export const Categories: React.FC<CategoriesProps> = ({ onCategoryClick }) => {
   return (
     <section className="categories py-12 bg-white" id="kategorije">
       <div className="categories__container container mx-auto px-6 md:px-12">
@@ -23,7 +28,15 @@ export const Categories: React.FC = () => {
         
         <div className="categories__grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
           {categories.map((cat) => (
-            <div key={cat.id} className="category-card group cursor-pointer">
+            <div 
+              key={cat.id} 
+              className="category-card group cursor-pointer"
+              onClick={() => {
+                if (cat.id === '1' && onCategoryClick) {
+                  onCategoryClick(cat.id);
+                }
+              }}
+            >
               {/* Image Container */}
               <div className="category-card__image-container relative aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100">
                 <img 

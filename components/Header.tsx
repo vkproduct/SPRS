@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Menu, User } from 'lucide-react';
 import { ViewType } from '../App';
@@ -51,6 +52,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
   const handleBusinessClick = () => {
     if (onNavigate) onNavigate('partners');
   };
+  
+  const handleVenuesClick = () => {
+    if (onNavigate) onNavigate('venues');
+  };
 
   return (
     <header 
@@ -82,14 +87,17 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
             </div>
           </div>
 
-          {/* Center Nav - Only show on Home view */}
-          {currentView === 'home' && (
-            <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
-              <button className="header__nav-link font-medium text-portal-dark hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Prostori</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2  text-sm rounded-full transition-all">Usluge</button>
-              <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Inspiracija</button>
-            </div>
-          )}
+          {/* Center Nav */}
+          <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
+            <button 
+              onClick={handleVenuesClick}
+              className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'venues' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
+            >
+              Prostori
+            </button>
+            <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2  text-sm rounded-full transition-all">Usluge</button>
+            <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Inspiracija</button>
+          </div>
 
           {/* Right Actions */}
           <div className="header__actions flex-1 flex justify-end items-center gap-2">
