@@ -80,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
           {/* Logo - Typographic Wordmark in Brand Color */}
           <div onClick={handleLogoClick} className="header__logo flex items-center flex-1 cursor-pointer group select-none">
             <div className="flex items-baseline transition-opacity hover:opacity-80">
-                <span className="font-poppins font-semibold text-2xl md:text-3xl tracking-tight text-primary uppercase">
+                <span className="font-poppins font-semibold text-xl md:text-xl tracking-tight text-primary uppercase">
                   SveZaProslavu
                 </span>
                 <span className="font-poppins text-primary/60 font-semibold text-lg md:text-xl tracking-tight ml-0.5">.rs</span>
