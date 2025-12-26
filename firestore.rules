@@ -1,10 +1,10 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper function to check if user is admin
     function isAdmin() {
+      // Assuming a custom claim 'admin' or checking specific UID
       return request.auth != null && request.auth.token.admin == true;
     }
 
@@ -17,9 +17,8 @@ service cloud.firestore {
     }
 
     // Rules for Inquiries (Leads) Collection
-    // CREATE: Anyone can create an inquiry (public lead form)
-    // READ: Only admins can read inquiries (protect user data)
-    // UPDATE/DELETE: Only admins
+    // CREATE: Publicly writeable (create only)
+    // READ: Only admins can read inquiries
     match /inquiries/{inquiryId} {
       allow create: if request.resource.data.keys().hasAll(['vendorId', 'userName', 'contact'])
                    && request.resource.data.userName is string
