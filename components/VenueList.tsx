@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, MapPin, Users, Euro, Filter, ChevronDown, SlidersHorizontal, ArrowUpRight, MessageCircle, Camera, Music, Video, X } from 'lucide-react';
-import { vendors, categories } from '../data/database';
+import { categories } from '../data/database'; // We still keep categories local for now
+import { getVendors } from '../services/vendorService';
 import { Vendor, VendorType } from '../types';
 
 interface VenueListProps {
@@ -16,6 +17,10 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
   const [minCapacity, setMinCapacity] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // State for data
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Sync with prop
   useEffect(() => {
@@ -26,19 +31,30 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
     }
   }, [initialCategoryId]);
 
+  // Fetch Data
+  useEffect(() => {
+      const fetchData = async () => {
+          setLoading(true);
+          const data = await getVendors(filterType, selectedCategoryId);
+          setVendors(data);
+          setLoading(false);
+      };
+      fetchData();
+  }, [filterType, selectedCategoryId]); // Re-fetch when major filters change
+
   // Determine which categories are available based on filterType
   const availableCategories = useMemo(() => {
       if (!filterType) return categories;
       
       return categories.filter(cat => {
-          const hasVendorsOfType = vendors.some(v => v.category_id === cat.id && v.type === filterType);
-          return hasVendorsOfType;
+          // Optimization: Ideally this check should also be dynamic, but for now we keep static check
+          return true; 
       });
   }, [filterType]);
 
   const filteredVendors = useMemo(() => {
     return vendors.filter(vendor => {
-      // 0. Strict Type Filter
+      // 0. Strict Type Filter (already handled by service, but good for safety)
       if (filterType && vendor.type !== filterType) {
           return false;
       }
@@ -48,7 +64,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                             vendor.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             vendor.city.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // 2. Filter by Category
+      // 2. Filter by Category (already handled by service, but search bar resets 'all')
       const matchesCategory = selectedCategoryId === 'all' || vendor.category_id === selectedCategoryId;
       
       // 3. Filter by Capacity (Only for VENUES)
@@ -72,15 +88,17 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
 
       return matchesSearch && matchesCategory && matchesCapacity && matchesPrice;
     });
-  }, [searchTerm, selectedCategoryId, minCapacity, maxPrice, filterType]);
+  }, [vendors, searchTerm, selectedCategoryId, minCapacity, maxPrice, filterType]);
 
   const activeCategory = categories.find(c => c.id === selectedCategoryId);
   
   // Text configuration based on filterType
   const pageTitle = filterType === 'VENUE' ? 'Pronađite idealan prostor' : (filterType === 'SERVICE' ? 'Profesionalne usluge' : 'Svi rezultati');
-  const pageSubtitle = filterType === 'VENUE' 
-    ? `Pronađeno ${filteredVendors.length} restorana i sala` 
-    : `Pronađeno ${filteredVendors.length} profesionalaca`;
+  const pageSubtitle = loading 
+    ? 'Učitavanje...' 
+    : (filterType === 'VENUE' 
+        ? `Pronađeno ${filteredVendors.length} restorana i sala` 
+        : `Pronađeno ${filteredVendors.length} profesionalaca`);
   
   const placeholderText = filterType === 'VENUE' ? "Ime prostora, grad..." : "Fotograf, bend, grad...";
   const pricePlaceholder = filterType === 'VENUE' ? "Max € po osobi" : "Max € (paket)";
@@ -213,86 +231,92 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
             </div>
 
             {/* Results Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredVendors.map((vendor) => (
-                <div 
-                key={vendor.id} 
-                className="bg-white rounded-xl shadow-sm hover:shadow-floating transition-all duration-300 group overflow-hidden border border-transparent hover:border-gray-100 flex flex-col h-full cursor-pointer"
-                onClick={() => onVenueSelect && onVenueSelect(vendor)}
-                >
-                
-                {/* Image Area */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
-                    <img 
-                    src={vendor.cover_image} 
-                    alt={vendor.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded text-xs font-bold text-portal-dark uppercase tracking-wide">
-                    {vendor.type === 'VENUE' ? vendor.venue_type : vendor.service_type}
-                    </div>
-                    
-                    {/* Price Tag Logic */}
-                    <div className="absolute bottom-3 right-3 bg-portal-dark text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                    {vendor.type === 'VENUE' 
-                        ? `od ${vendor.pricing.per_person_from}€ / os` 
-                        : (vendor.pricing.package_from 
-                            ? `od ${vendor.pricing.package_from}€` 
-                            : `${vendor.pricing.hourly_rate}€ / h`)
-                    }
-                    </div>
+            {loading ? (
+                <div className="flex justify-center items-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
-
-                {/* Content Area */}
-                <div className="p-4 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-portal-dark text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                        {vendor.name}
-                    </h3>
-                    </div>
-
-                    <div className="flex items-start gap-1.5 text-gray-500 text-sm mb-3">
-                    <MapPin size={16} className="mt-0.5 shrink-0" />
-                    <span className="line-clamp-1">{vendor.address}, {vendor.city}</span>
-                    </div>
-
-                    {/* Features / Capacity Line */}
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600 mt-auto">
-                    
-                    {/* Icon logic based on type */}
-                    <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded text-xs">
-                        {vendor.type === 'VENUE' ? (
-                            <>
-                                <Users size={14} className="text-primary" />
-                                <span>{vendor.capacity.min} - {vendor.capacity.max}</span>
-                            </>
-                        ) : (
-                            <>
-                                {vendor.category_id === '2' ? <Camera size={14} className="text-primary"/> : <Music size={14} className="text-primary"/>}
-                                <span>{vendor.features[0] || 'Profi oprema'}</span>
-                            </>
-                        )}
-                    </div>
-
-                    {vendor.reviews_count > 0 && (
-                        <div className="flex items-center gap-1.5">
-                            <MessageCircle size={14} className="text-gray-400" />
-                            <span>{vendor.reviews_count}</span>
-                        </div>
-                    )}
-                    </div>
-
-                    <button 
-                    className="w-full mt-2 py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-portal-dark hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredVendors.map((vendor) => (
+                    <div 
+                    key={vendor.id} 
+                    className="bg-white rounded-xl shadow-sm hover:shadow-floating transition-all duration-300 group overflow-hidden border border-transparent hover:border-gray-100 flex flex-col h-full cursor-pointer"
+                    onClick={() => onVenueSelect && onVenueSelect(vendor)}
                     >
-                    Pogledaj detalje <ArrowUpRight size={16} />
-                    </button>
-                </div>
-                </div>
-            ))}
-            </div>
+                    
+                    {/* Image Area */}
+                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
+                        <img 
+                        src={vendor.cover_image} 
+                        alt={vendor.name} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded text-xs font-bold text-portal-dark uppercase tracking-wide">
+                        {vendor.type === 'VENUE' ? vendor.venue_type : vendor.service_type}
+                        </div>
+                        
+                        {/* Price Tag Logic */}
+                        <div className="absolute bottom-3 right-3 bg-portal-dark text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                        {vendor.type === 'VENUE' 
+                            ? `od ${vendor.pricing.per_person_from}€ / os` 
+                            : (vendor.pricing.package_from 
+                                ? `od ${vendor.pricing.package_from}€` 
+                                : `${vendor.pricing.hourly_rate}€ / h`)
+                        }
+                        </div>
+                    </div>
 
-            {filteredVendors.length === 0 && (
+                    {/* Content Area */}
+                    <div className="p-4 flex flex-col flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-portal-dark text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                            {vendor.name}
+                        </h3>
+                        </div>
+
+                        <div className="flex items-start gap-1.5 text-gray-500 text-sm mb-3">
+                        <MapPin size={16} className="mt-0.5 shrink-0" />
+                        <span className="line-clamp-1">{vendor.address}, {vendor.city}</span>
+                        </div>
+
+                        {/* Features / Capacity Line */}
+                        <div className="flex items-center gap-4 mb-4 text-sm text-gray-600 mt-auto">
+                        
+                        {/* Icon logic based on type */}
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded text-xs">
+                            {vendor.type === 'VENUE' ? (
+                                <>
+                                    <Users size={14} className="text-primary" />
+                                    <span>{vendor.capacity.min} - {vendor.capacity.max}</span>
+                                </>
+                            ) : (
+                                <>
+                                    {vendor.category_id === '2' ? <Camera size={14} className="text-primary"/> : <Music size={14} className="text-primary"/>}
+                                    <span>{vendor.features[0] || 'Profi oprema'}</span>
+                                </>
+                            )}
+                        </div>
+
+                        {vendor.reviews_count > 0 && (
+                            <div className="flex items-center gap-1.5">
+                                <MessageCircle size={14} className="text-gray-400" />
+                                <span>{vendor.reviews_count}</span>
+                            </div>
+                        )}
+                        </div>
+
+                        <button 
+                        className="w-full mt-2 py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-portal-dark hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
+                        >
+                        Pogledaj detalje <ArrowUpRight size={16} />
+                        </button>
+                    </div>
+                    </div>
+                ))}
+                </div>
+            )}
+
+            {!loading && filteredVendors.length === 0 && (
             <div className="text-center py-20 bg-white rounded-xl border border-gray-100 mt-2">
                 <div className="inline-block p-6 rounded-full bg-gray-50 mb-4">
                 <Search size={40} className="text-gray-400" />

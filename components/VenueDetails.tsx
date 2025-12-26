@@ -6,9 +6,10 @@ import {
   Mail, Phone, Clock
 } from 'lucide-react';
 import { Vendor } from '../types';
+import { submitInquiry } from '../services/vendorService';
 
 interface VenueDetailsProps {
-  venue: Vendor; // Using 'venue' prop name to minimize parent changes, but types are updated
+  venue: Vendor; 
   onBack: () => void;
 }
 
@@ -24,10 +25,42 @@ const generateReviews = (count: number) => {
 export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBack }) => {
   const reviews = generateReviews(vendor.reviews_count);
   const [inquirySent, setInquirySent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleInquirySubmit = (e: React.FormEvent) => {
+  // Form State
+  const [formData, setFormData] = useState({
+      date: '',
+      count: '',
+      name: '',
+      contact: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({
+          ...formData,
+          [e.target.type === 'date' ? 'date' : e.target.placeholder.includes('Br') ? 'count' : e.target.placeholder.includes('Vaše') ? 'name' : 'contact']: e.target.value
+      });
+  };
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInquirySent(true);
+    setLoading(true);
+
+    const success = await submitInquiry({
+        vendorId: vendor.id,
+        vendorName: vendor.name,
+        date: formData.date,
+        guestCount: parseInt(formData.count) || 0,
+        userName: formData.name,
+        contact: formData.contact
+    });
+
+    setLoading(false);
+    if (success) {
+        setInquirySent(true);
+    } else {
+        alert("Došlo je do greške. Molimo pokušajte ponovo.");
+    }
   };
 
   const isVenue = vendor.type === 'VENUE';
@@ -242,28 +275,32 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
                         <div className="grid grid-cols-2 gap-2">
                             <div className="border border-gray-300 rounded-lg p-2">
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase">Datum</label>
-                                <input type="date" className="w-full text-sm outline-none text-portal-dark" required />
+                                <input type="date" onChange={handleInputChange} className="w-full text-sm outline-none text-portal-dark" required />
                             </div>
                             <div className="border border-gray-300 rounded-lg p-2">
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase">
                                     {isVenue ? 'Gosti' : 'Sati'}
                                 </label>
-                                <input type="number" placeholder="Br." className="w-full text-sm outline-none text-portal-dark" min="1" required />
+                                <input type="number" onChange={handleInputChange} placeholder="Br." className="w-full text-sm outline-none text-portal-dark" min="1" required />
                             </div>
                         </div>
 
                         <div className="border border-gray-300 rounded-lg p-2">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase">Ime i Prezime</label>
-                            <input type="text" placeholder="Vaše ime" className="w-full text-sm outline-none text-portal-dark" required />
+                            <input type="text" onChange={handleInputChange} placeholder="Vaše ime" className="w-full text-sm outline-none text-portal-dark" required />
                         </div>
                         
                         <div className="border border-gray-300 rounded-lg p-2">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase">Email / Telefon</label>
-                            <input type="text" placeholder="Kontakt podaci" className="w-full text-sm outline-none text-portal-dark" required />
+                            <input type="text" onChange={handleInputChange} placeholder="Kontakt podaci" className="w-full text-sm outline-none text-portal-dark" required />
                         </div>
 
-                        <button type="submit" className="bg-primary text-white font-bold py-3.5 rounded-lg hover:bg-rose-600 transition-colors mt-2 text-lg shadow-md">
-                            Proveri dostupnost
+                        <button 
+                          type="submit" 
+                          disabled={loading}
+                          className="bg-primary text-white font-bold py-3.5 rounded-lg hover:bg-rose-600 transition-colors mt-2 text-lg shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex justify-center"
+                        >
+                            {loading ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Proveri dostupnost'}
                         </button>
                         <p className="text-xs text-center text-gray-500 mt-1">Nećete biti naplaćeni odmah.</p>
                     </form>
