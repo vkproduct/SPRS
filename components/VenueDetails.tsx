@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   MapPin, Users, Euro, Check, X, Music, Camera, Car, 
-  Utensils, Calendar, ChevronLeft, Star, Share2, Heart,
+  Utensils, Calendar, ChevronLeft, ChevronRight, Star, Share2, Heart,
   Mail, Phone, Clock
 } from 'lucide-react';
 import { Vendor } from '../types';
@@ -26,6 +26,9 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
   const reviews = generateReviews(vendor.reviews_count);
   const [inquirySent, setInquirySent] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Lightbox State
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -63,10 +66,70 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
     }
   };
 
+  const openLightbox = (index: number) => {
+    setSelectedImageIndex(index);
+  };
+
+  const closeLightbox = () => {
+    setSelectedImageIndex(null);
+  };
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedImageIndex === null) return;
+    const next = selectedImageIndex === vendor.gallery.length - 1 ? 0 : selectedImageIndex + 1;
+    setSelectedImageIndex(next);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedImageIndex === null) return;
+    const prev = selectedImageIndex === 0 ? vendor.gallery.length - 1 : selectedImageIndex - 1;
+    setSelectedImageIndex(prev);
+  };
+
   const isVenue = vendor.type === 'VENUE';
 
   return (
     <div className="bg-white min-h-screen pt-36 pb-12 animate-fade-in">
+      
+      {/* LIGHTBOX OVERLAY */}
+      {selectedImageIndex !== null && (
+        <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4" onClick={closeLightbox}>
+            <button className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors p-2" onClick={closeLightbox}>
+                <X size={32} />
+            </button>
+            
+            <img 
+                src={vendor.gallery[selectedImageIndex] || vendor.cover_image} 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
+                onClick={(e) => e.stopPropagation()} 
+                alt="Full screen view"
+            />
+            
+            {vendor.gallery.length > 1 && (
+                <>
+                    <button 
+                        className="absolute left-4 md:left-8 text-white hover:text-gray-300 p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors" 
+                        onClick={prevImage}
+                    >
+                        <ChevronLeft size={40} />
+                    </button>
+                    <button 
+                        className="absolute right-4 md:right-8 text-white hover:text-gray-300 p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors" 
+                        onClick={nextImage}
+                    >
+                        <ChevronRight size={40} />
+                    </button>
+                </>
+            )}
+            
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-white/80 text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+                {selectedImageIndex + 1} / {vendor.gallery.length}
+            </div>
+        </div>
+      )}
+
       {/* Navbar Placeholder / Back Button */}
       <div className="container mx-auto px-6 md:px-12 py-4 border-b border-gray-100 mb-6 flex justify-between items-center">
         <button 
@@ -107,19 +170,37 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
           </div>
         </div>
 
-        {/* Image Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-[300px] md:h-[450px] rounded-2xl overflow-hidden mb-10 relative">
-          <div className="col-span-2 h-full">
-            <img src={vendor.gallery[0]} alt={vendor.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 cursor-pointer" />
+        {/* Image Gallery Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-[300px] md:h-[450px] rounded-2xl overflow-hidden mb-10 relative select-none">
+          
+          {/* Main Large Image */}
+          <div className="col-span-2 h-full relative group cursor-pointer" onClick={() => openLightbox(0)}>
+            <img 
+                src={vendor.gallery[0]} 
+                alt={vendor.name} 
+                className="w-full h-full object-cover transition-opacity hover:opacity-95" 
+            />
           </div>
+
+          {/* Side Images */}
           <div className="col-span-1 flex flex-col gap-2 h-full">
-            <div className="h-1/2 overflow-hidden">
-                <img src={vendor.gallery[1] || vendor.cover_image} alt="Detail" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 cursor-pointer" />
+            <div className="h-1/2 overflow-hidden relative group cursor-pointer" onClick={() => openLightbox(1)}>
+                <img 
+                    src={vendor.gallery[1] || vendor.cover_image} 
+                    alt="Detail" 
+                    className="w-full h-full object-cover transition-opacity hover:opacity-95" 
+                />
             </div>
-            <div className="h-1/2 overflow-hidden relative">
-                <img src={vendor.gallery[2] || vendor.cover_image} alt="Detail" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 cursor-pointer" />
-                <button className="absolute bottom-4 right-4 bg-white/90 hover:bg-white text-portal-dark text-xs font-bold px-4 py-2 rounded-lg shadow-md border border-gray-200">
-                    Pogledaj sve slike
+            <div className="h-1/2 overflow-hidden relative group cursor-pointer" onClick={() => openLightbox(2)}>
+                <img 
+                    src={vendor.gallery[2] || vendor.cover_image} 
+                    alt="Detail" 
+                    className="w-full h-full object-cover transition-opacity hover:opacity-95" 
+                />
+                
+                {/* 'View All' Button Overlay */}
+                <button className="absolute bottom-4 right-4 bg-white/90 hover:bg-white text-portal-dark text-xs font-bold px-4 py-2 rounded-lg shadow-md border border-gray-200 pointer-events-none">
+                    Pogledaj sve slike ({vendor.gallery.length})
                 </button>
             </div>
           </div>

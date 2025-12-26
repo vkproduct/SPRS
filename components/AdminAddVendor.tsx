@@ -1,8 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, Save, Upload, Download, FileText } from 'lucide-react';
+import { ChevronLeft, Save, Upload, Download, FileText, Plus, Trash2 } from 'lucide-react';
 import { addVendor, addVendorsBatch } from '../services/vendorService';
-import { Vendor } from '../types';
 
 interface AdminAddVendorProps {
   onBack: () => void;
@@ -23,13 +22,34 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
     price_from: '',
     capacity_min: '',
     capacity_max: '',
-    cover_image: '', // URL
+    cover_image: '', // Main image
     phone: '',
     email: ''
   });
 
+  // Extra gallery images (up to 9 more, total 10)
+  const [galleryInputs, setGalleryInputs] = useState<string[]>([]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAddGalleryInput = () => {
+    if (galleryInputs.length < 9) {
+        setGalleryInputs([...galleryInputs, '']);
+    }
+  };
+
+  const handleGalleryInputChange = (index: number, value: string) => {
+    const newInputs = [...galleryInputs];
+    newInputs[index] = value;
+    setGalleryInputs(newInputs);
+  };
+
+  const handleRemoveGalleryInput = (index: number) => {
+    const newInputs = [...galleryInputs];
+    newInputs.splice(index, 1);
+    setGalleryInputs(newInputs);
   };
 
   // --- MANUAL SUBMIT ---
@@ -37,7 +57,11 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
     e.preventDefault();
     setLoading(true);
 
-    const newVendor = constructVendorObject(formData);
+    // Combine cover + additional images
+    const fullGallery = [formData.cover_image, ...galleryInputs].filter(url => url && url.trim().length > 0);
+    
+    // Pass the explicitly constructed gallery
+    const newVendor = constructVendorObject({ ...formData, gallery: fullGallery });
     const success = await addVendor(newVendor);
     setLoading(false);
 
@@ -50,6 +74,11 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
   // --- CSV HELPER FUNCTIONS ---
 
   const constructVendorObject = (data: any) => {
+    // Use provided gallery or fallback to single cover image
+    const imagesList = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 
+        ? data.gallery 
+        : [data.cover_image || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'];
+
     const newVendor: any = {
       type: data.type.toUpperCase(),
       name: data.name,
@@ -58,8 +87,8 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
       address: data.address,
       city: data.city,
       description: data.description || '',
-      cover_image: data.cover_image || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80',
-      gallery: [data.cover_image || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'],
+      cover_image: imagesList[0], // First image is cover
+      gallery: imagesList,
       rating: 5.0,
       reviews_count: 0,
       price_range_symbol: '€€',
@@ -92,7 +121,7 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
 
   const downloadTemplate = () => {
     const headers = "type,name,category_id,city,address,price_from,capacity_min,capacity_max,cover_image,phone,description";
-    const example = "VENUE,Restoran Nova Era,1,Beograd,Adresa 10,45,50,250,https://example.com/img.jpg,+381641234567,Opis restorana...";
+    const example = "VENUE,Restoran Nova Era,1,Beograd,Adresa 10,45,50,250,https://img1.com/a.jpg;https://img2.com/b.jpg,+381641234567,Opis restorana...";
     const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -118,12 +147,14 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
         const parsedVendors: any[] = [];
 
         dataRows.forEach(row => {
-            // Simple split by comma (NOTE: doesn't handle commas inside quotes!)
+            // Simple split by comma
             const cols = row.split(',');
             if (cols.length < 5) return; // Skip invalid rows
 
-            // Map CSV columns to object keys matching constructVendorObject expectations
-            // Order based on template: type,name,cat_id,city,address,price,cap_min,cap_max,img,phone,desc
+            // Handle multiple images in column 8 (split by ;)
+            const imageCol = cols[8] || '';
+            const allImages = imageCol.split(';').map(s => s.trim()).filter(s => s);
+
             const rawData = {
                 type: cols[0],
                 name: cols[1],
@@ -133,7 +164,8 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 price_from: cols[5],
                 capacity_min: cols[6],
                 capacity_max: cols[7],
-                cover_image: cols[8],
+                cover_image: allImages[0], // First one
+                gallery: allImages,        // All of them
                 phone: cols[9],
                 description: cols[10]
             };
@@ -208,9 +240,47 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 </div>
             </div>
 
-            <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL Slike (Cover)</label>
-                <input name="cover_image" required value={formData.cover_image} onChange={handleChange} className="w-full p-3 border rounded-lg" placeholder="https://..." />
+            {/* GALLERY SECTION */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Galerija Slika (Max 10)</label>
+                
+                {/* Main Cover Image */}
+                <div className="mb-3">
+                    <input name="cover_image" required value={formData.cover_image} onChange={handleChange} className="w-full p-3 border rounded-lg bg-white" placeholder="Glavna slika (URL)..." />
+                </div>
+
+                {/* Additional Images */}
+                <div className="space-y-2">
+                    {galleryInputs.map((url, index) => (
+                        <div key={index} className="flex gap-2">
+                            <input 
+                                value={url} 
+                                onChange={(e) => handleGalleryInputChange(index, e.target.value)} 
+                                className="w-full p-3 border rounded-lg bg-white" 
+                                placeholder={`Slika #${index + 2} (URL)...`} 
+                            />
+                            <button 
+                                type="button" 
+                                onClick={() => handleRemoveGalleryInput(index)}
+                                className="p-3 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Add Button */}
+                {galleryInputs.length < 9 && (
+                    <button 
+                        type="button" 
+                        onClick={handleAddGalleryInput}
+                        className="mt-3 text-sm font-bold text-primary flex items-center gap-1 hover:underline"
+                    >
+                        <Plus size={16} /> Dodaj još slika
+                    </button>
+                )}
+                <p className="text-xs text-gray-400 mt-2">Unesite direktne linkove ka slikama.</p>
             </div>
 
             <div>
@@ -295,9 +365,10 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 <h3 className="font-bold mb-2 text-sm">Uputstvo za CSV</h3>
                 <ul className="text-xs text-gray-500 space-y-2 list-disc pl-4">
                     <li>Koristite zarez (,) kao razdelnik.</li>
+                    <li><strong>Više slika:</strong> U koloni za slike, razdvojite linkove tačkom i zarezom (;). <br/>Primer: <code>img1.jpg;img2.jpg</code></li>
+                    <li>Prva slika je glavna (cover).</li>
                     <li>Slike moraju biti direktni linkovi (URL).</li>
-                    <li>Za kategorije koristite ID (1=Restorani, 2=Foto...).</li>
-                    <li>Datum i redosled kolona moraju pratiti šablon.</li>
+                    <li>Za kategorije koristite ID (1=Restorani...).</li>
                 </ul>
             </div>
         </div>
