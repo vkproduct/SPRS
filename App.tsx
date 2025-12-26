@@ -9,31 +9,50 @@ import { Footer } from './components/Footer';
 import { ForPartners } from './components/ForPartners';
 import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
-import { Venue } from './types';
+import { Vendor } from './types';
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'venue-details';
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
-  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  // Add state to track which category was clicked on Home
+  const [targetCategory, setTargetCategory] = useState<string | null>(null);
 
   const handleNavigate = (view: ViewType) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setCurrentView(view);
-    // Reset selection when navigating via header, unless we specifically handled it elsewhere
     if (view !== 'venue-details') {
-      setSelectedVenue(null);
+      setSelectedVendor(null);
+      // Reset target category if navigating top-level
+      setTargetCategory(null);
     }
   };
 
-  const handleVenueSelect = (venue: Venue) => {
-    setSelectedVenue(venue);
+  const handleCategoryClick = (categoryId: string) => {
+    setTargetCategory(categoryId);
+    // Logic to decide view based on category ID
+    // ID '1' is Venues, everything else is Services
+    if (categoryId === '1') {
+        handleNavigate('venues');
+    } else {
+        handleNavigate('services');
+    }
+  };
+
+  const handleVendorSelect = (vendor: Vendor) => {
+    setSelectedVendor(vendor);
     setCurrentView('venue-details');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBackToVenues = () => {
-    setCurrentView('venues');
+  const handleBack = () => {
+    // Go back to the list view matching the current vendor type
+    if (selectedVendor?.type === 'VENUE') {
+        setCurrentView('venues');
+    } else {
+        setCurrentView('services');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -44,7 +63,7 @@ function App() {
         {currentView === 'home' && (
           <>
             <Hero />
-            <Categories onCategoryClick={() => handleNavigate('venues')} />
+            <Categories onCategoryClick={handleCategoryClick} />
             <AiPlanner />
             <LeadForm />
           </>
@@ -55,11 +74,23 @@ function App() {
         )}
 
         {currentView === 'venues' && (
-          <VenueList onVenueSelect={handleVenueSelect} />
+          <VenueList 
+            onVenueSelect={handleVendorSelect} 
+            initialCategoryId={targetCategory} 
+            filterType="VENUE"
+          />
         )}
 
-        {currentView === 'venue-details' && selectedVenue && (
-          <VenueDetails venue={selectedVenue} onBack={handleBackToVenues} />
+        {currentView === 'services' && (
+          <VenueList 
+            onVenueSelect={handleVendorSelect} 
+            initialCategoryId={targetCategory} 
+            filterType="SERVICE"
+          />
+        )}
+
+        {currentView === 'venue-details' && selectedVendor && (
+          <VenueDetails venue={selectedVendor} onBack={handleBack} />
         )}
       </main>
       <Footer />

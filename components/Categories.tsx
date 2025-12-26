@@ -1,18 +1,7 @@
 
 import React from 'react';
 import { Heart } from 'lucide-react';
-import { VendorCategory } from '../types';
-
-const categories: VendorCategory[] = [
-  { id: '1', name: 'Restorani i Sale', iconName: 'Home', count: 120, image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80' },
-  { id: '2', name: 'Fotografi', iconName: 'Camera', count: 85, image: 'https://images.unsplash.com/photo-1520854221256-17451cc330e7?auto=format&fit=crop&w=800&q=80' },
-  { id: '3', name: 'Muzika za proslave', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
-  { id: '4', name: 'Torte i Slatkiši', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
-  { id: '5', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
-  { id: '6', name: 'Venčanice i Moda', iconName: 'Scissors', count: 28, image: 'https://images.unsplash.com/photo-1594552072238-b8a33785b261?auto=format&fit=crop&w=800&q=80' },
-  { id: '7', name: 'Prevoz / Limuzine', iconName: 'Car', count: 15, image: 'https://images.unsplash.com/photo-1582218881267-93ae3425a745?auto=format&fit=crop&w=800&q=80' },
-  { id: '8', name: 'Pozivnice', iconName: 'Gift', count: 20, image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80' },
-];
+import { categories } from '../data/database';
 
 interface CategoriesProps {
   onCategoryClick?: (categoryId: string) => void;
@@ -32,7 +21,9 @@ export const Categories: React.FC<CategoriesProps> = ({ onCategoryClick }) => {
               key={cat.id} 
               className="category-card group cursor-pointer"
               onClick={() => {
-                if (cat.id === '1' && onCategoryClick) {
+                // If onCategoryClick is provided, pass the category ID. 
+                // We assume 'venues' is id '1', 'photographers' is '2', etc.
+                if (onCategoryClick) {
                   onCategoryClick(cat.id);
                 }
               }}
@@ -54,7 +45,7 @@ export const Categories: React.FC<CategoriesProps> = ({ onCategoryClick }) => {
               <div className="category-card__content flex justify-between items-start">
                 <div>
                   <h3 className="category-card__title font-semibold text-portal-dark text-[15px]">{cat.name}</h3>
-                  <p className="category-card__subtitle text-portal-gray text-[15px]">Za svadbe i firme</p>
+                  <p className="category-card__subtitle text-portal-gray text-[15px]">Istraži ponudu</p>
                   <div className="mt-1 flex items-baseline gap-1">
                     <span className="category-card__count font-semibold text-portal-dark text-sm">{cat.count}</span>
                     <span className="text-portal-dark text-sm">provajdera</span>

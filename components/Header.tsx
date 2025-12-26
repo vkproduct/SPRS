@@ -57,6 +57,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     if (onNavigate) onNavigate('venues');
   };
 
+  const handleServicesClick = () => {
+    if (onNavigate) onNavigate('services');
+  };
+
   return (
     <header 
       className={`header fixed w-full z-50 transition-all duration-300 bg-white border-b border-gray-100 flex flex-col`}
@@ -95,7 +99,12 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
             >
               Prostori
             </button>
-            <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2  text-sm rounded-full transition-all">Usluge</button>
+            <button 
+              onClick={handleServicesClick}
+              className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'services' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
+            >
+              Usluge
+            </button>
             <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Inspiracija</button>
           </div>
 

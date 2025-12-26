@@ -1,5 +1,19 @@
 
-import { Venue } from '../types';
+interface Venue {
+  name: string;
+  url: string;
+  address: string;
+  municipality?: string;
+  google_maps_url: string;
+  capacity_min: number;
+  capacity_max: number;
+  price_from_eur: number | null;
+  price_to_eur: number | null;
+  venue_type: string;
+  description?: string;
+  amenities?: { [key: string]: any };
+  comments_count: number | null;
+}
 
 export const venuesData: Venue[] = [
     {

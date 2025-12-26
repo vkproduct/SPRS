@@ -1,7 +1,9 @@
 
+// Common interfaces
 export interface VendorCategory {
   id: string;
   name: string;
+  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other'; // Database keys
   iconName: string;
   count: number;
   image: string;
@@ -15,31 +17,59 @@ export interface Testimonial {
   avatar: string;
 }
 
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-  isError?: boolean;
+export type VendorType = 'VENUE' | 'SERVICE';
+
+export interface BaseVendor {
+  id: string;
+  name: string;
+  slug: string; // for url
+  category_id: string; // link to category
+  address: string;
+  city: string;
+  google_maps_url?: string;
+  cover_image: string;
+  gallery: string[];
+  rating: number;
+  reviews_count: number;
+  price_range_symbol: '€' | '€€' | '€€€';
+  description: string;
+  features: string[]; // Generic tags like "WiFi", "Parking", "Drone"
+  contact: {
+    phone: string;
+    email: string;
+    website?: string;
+    instagram?: string;
+  };
 }
 
-export interface Venue {
-  name: string;
-  url: string;
-  address: string;
-  municipality?: string;
-  google_maps_url: string;
-  capacity_min: number;
-  capacity_max: number;
-  price_from_eur: number | null;
-  price_to_eur: number | null;
-  venue_type: string;
-  description?: string;
-  amenities?: {
-    music?: string;
-    decoration?: string;
-    discounts_for_newlyweds?: boolean;
-    parking?: boolean;
-    photographer?: string;
-    bridal_apartment?: boolean;
+// Specifics for Venues (Restaurants, Halls)
+export interface VenueVendor extends BaseVendor {
+  type: 'VENUE';
+  venue_type: string; // Event Centar, Restoran, Splav
+  capacity: {
+    min: number;
+    max: number;
+    seated: number;
+    cocktail: number;
   };
-  comments_count: number | null;
+  pricing: {
+    per_person_from: number;
+    per_person_to?: number;
+    rental_fee?: number;
+  };
 }
+
+// Specifics for Services (Photographers, Bands, Decor)
+export interface ServiceVendor extends BaseVendor {
+  type: 'SERVICE';
+  service_type: string; // "Wedding Photography", "Live Band", "DJ"
+  pricing: {
+    hourly_rate?: number;
+    package_from?: number;
+    min_hours?: number;
+  };
+  experience_years?: number;
+}
+
+// Union type for use in components
+export type Vendor = VenueVendor | ServiceVendor;
