@@ -1,6 +1,6 @@
 
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch } from 'firebase/firestore';
 import { vendors as localVendors } from '../data/database';
 import { Vendor, VendorType } from '../types';
 
@@ -64,6 +64,32 @@ export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
     } catch (error) {
         console.error("Error adding vendor:", error);
         alert("Greška pri dodavanju. Proverite Firestore Rules (write permissions).");
+        return false;
+    }
+};
+
+/**
+ * Adds multiple vendors at once (Batch)
+ */
+export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
+    if (!db) {
+        alert("Firebase is not configured.");
+        return false;
+    }
+    
+    try {
+        const batch = writeBatch(db);
+        
+        vendorsData.forEach(vendor => {
+            const docRef = doc(collection(db, VENDORS_COLLECTION)); // Generate new ID
+            batch.set(docRef, vendor);
+        });
+
+        await batch.commit();
+        return true;
+    } catch (error) {
+        console.error("Batch upload error:", error);
+        alert("Greška pri masovnom dodavanju.");
         return false;
     }
 };
