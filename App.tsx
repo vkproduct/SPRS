@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Categories } from './components/Categories';
@@ -9,30 +9,48 @@ import { Footer } from './components/Footer';
 import { ForPartners } from './components/ForPartners';
 import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
+import { AdminAddVendor } from './components/AdminAddVendor'; // Import
 import { Vendor } from './types';
+import { db } from './lib/firebase';
+import { collection, getDocs, limit, query } from 'firebase/firestore';
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details';
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details' | 'admin-add';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
-  // Add state to track which category was clicked on Home
   const [targetCategory, setTargetCategory] = useState<string | null>(null);
+
+  // Debug: Check Firebase connection on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!db) {
+        console.log("%c⚠️ Firebase config missing or invalid. Check .env file.", "color: orange; font-weight: bold; font-size: 14px;");
+        return;
+      }
+      try {
+        console.log("%c🔄 Testing Firebase connection...", "color: blue;");
+        const q = query(collection(db, 'vendors'), limit(1));
+        await getDocs(q);
+        console.log("%c✅ Firebase Connected Successfully!", "color: green; font-weight: bold; font-size: 16px; background: #e6fffa; padding: 4px; border-radius: 4px;");
+      } catch (error) {
+        console.error("%c❌ Firebase Connection Failed:", "color: red; font-weight: bold; font-size: 16px;", error);
+      }
+    };
+    checkConnection();
+  }, []);
 
   const handleNavigate = (view: ViewType) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setCurrentView(view);
     if (view !== 'venue-details') {
       setSelectedVendor(null);
-      // Reset target category if navigating top-level
       setTargetCategory(null);
     }
   };
 
   const handleCategoryClick = (categoryId: string) => {
     setTargetCategory(categoryId);
-    // Logic to decide view based on category ID
-    // ID '1' is Venues, everything else is Services
     if (categoryId === '1') {
         handleNavigate('venues');
     } else {
@@ -47,7 +65,6 @@ function App() {
   };
 
   const handleBack = () => {
-    // Go back to the list view matching the current vendor type
     if (selectedVendor?.type === 'VENUE') {
         setCurrentView('venues');
     } else {
@@ -92,8 +109,12 @@ function App() {
         {currentView === 'venue-details' && selectedVendor && (
           <VenueDetails venue={selectedVendor} onBack={handleBack} />
         )}
+
+        {currentView === 'admin-add' && (
+          <AdminAddVendor onBack={() => handleNavigate('home')} />
+        )}
       </main>
-      <Footer />
+      <Footer onAdminClick={() => handleNavigate('admin-add')} />
     </div>
   );
 }

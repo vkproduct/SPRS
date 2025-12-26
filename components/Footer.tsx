@@ -1,7 +1,24 @@
-import React from 'react';
-import { Globe, Instagram, Facebook, Twitter } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+import React from 'react';
+import { Globe, Instagram, Facebook, Twitter, Database, PlusCircle } from 'lucide-react';
+import { seedDatabase } from '../services/vendorService';
+
+interface FooterProps {
+    onAdminClick?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
+  
+  // Hidden developer tool
+  const handleDevClick = (e: React.MouseEvent) => {
+    if (e.detail === 3) { // Triple click
+        const confirm = window.confirm("Developer Action: Upload local data to Firebase? (Check console for output)");
+        if (confirm) {
+            seedDatabase();
+        }
+    }
+  };
+
   return (
     <footer className="footer bg-portal-bg border-t border-gray-200 py-12">
       <div className="footer__container container mx-auto px-6 md:px-12">
@@ -35,14 +52,20 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="footer__bottom border-t border-gray-200 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-portal-dark">
-          <div className="footer__copyright flex flex-wrap gap-2 md:gap-4 font-light">
-            <span>© 2025 SveZaProslavu.rs</span>
+          <div className="footer__copyright flex flex-wrap gap-2 md:gap-4 font-light items-center">
+            <span onClick={handleDevClick} className="cursor-pointer" title="Triple click to seed DB">© 2025 SveZaProslavu.rs</span>
             <span className="hidden md:inline">·</span>
             <a href="#" className="footer__link hover:underline">Privatnost</a>
             <span className="hidden md:inline">·</span>
             <a href="#" className="footer__link hover:underline">Uslovi</a>
             <span className="hidden md:inline">·</span>
-            <a href="#" className="footer__link hover:underline">Mapa sajta</a>
+            
+            {/* ADMIN BUTTON */}
+            {onAdminClick && (
+                <button onClick={onAdminClick} className="text-gray-300 hover:text-primary transition-colors flex items-center gap-1" title="Dodaj novi profil">
+                    <PlusCircle size={14} /> Admin
+                </button>
+            )}
           </div>
           
           <div className="footer__social flex items-center gap-6 font-medium">
