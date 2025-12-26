@@ -24,7 +24,8 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
     capacity_max: '',
     cover_image: '', // Main image
     phone: '',
-    email: ''
+    email: '',
+    google_maps_url: ''
   });
 
   // Extra gallery images (up to 9 more, total 10)
@@ -86,6 +87,7 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
       category_id: data.category_id,
       address: data.address,
       city: data.city,
+      google_maps_url: data.google_maps_url || '',
       description: data.description || '',
       cover_image: imagesList[0], // First image is cover
       gallery: imagesList,
@@ -238,6 +240,12 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Adresa</label>
                 <input name="address" required value={formData.address} onChange={handleChange} className="w-full p-3 border rounded-lg" />
                 </div>
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Google Maps Link (Opciono)</label>
+                <input name="google_maps_url" value={formData.google_maps_url} onChange={handleChange} className="w-full p-3 border rounded-lg" placeholder="https://goo.gl/maps/..." />
+                <p className="text-[10px] text-gray-400 mt-1">Ako ostavite prazno, mapa će se generisati automatski na osnovu adrese.</p>
             </div>
 
             {/* GALLERY SECTION */}

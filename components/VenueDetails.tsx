@@ -90,6 +90,11 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
 
   const isVenue = vendor.type === 'VENUE';
 
+  // Generate Map URL
+  const mapQuery = encodeURIComponent(`${vendor.address}, ${vendor.city}`);
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  const externalMapUrl = vendor.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+
   return (
     <div className="bg-white min-h-screen pt-36 pb-12 animate-fade-in">
       
@@ -271,26 +276,31 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
                 </div>
             </div>
 
-            {/* Location (Static Map Placeholder) */}
+            {/* Location (Dynamic Map) */}
             <div className="py-8 border-b border-gray-100">
                  <h3 className="text-xl font-bold mb-4">Lokacija</h3>
                  <p className="text-gray-600 mb-4">{vendor.address}, {vendor.city}</p>
-                 <div className="w-full h-64 bg-gray-100 rounded-xl flex items-center justify-center relative overflow-hidden group">
-                    <img 
-                        src="https://www.google.com/maps/vt/data=lyt1K-p8yiM" 
-                        alt="Map placeholder" 
-                        className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" 
-                    />
-                    {vendor.google_maps_url && (
-                        <a 
-                            href={vendor.google_maps_url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="absolute bg-white px-6 py-3 rounded-full shadow-lg font-bold text-portal-dark hover:bg-gray-50 transition-transform hover:scale-105 flex items-center gap-2"
-                        >
-                            <MapPin size={18} className="text-primary" /> Otvori u Google Maps
-                        </a>
-                    )}
+                 <div className="w-full h-80 bg-gray-100 rounded-xl overflow-hidden relative shadow-inner group">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameBorder="0" 
+                        scrolling="no" 
+                        marginHeight={0} 
+                        marginWidth={0} 
+                        src={mapEmbedUrl}
+                        className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"
+                        title="Vendor Location"
+                    ></iframe>
+                    
+                    <a 
+                        href={externalMapUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="absolute bottom-4 right-4 bg-white px-5 py-2.5 rounded-full shadow-lg font-bold text-sm text-portal-dark hover:bg-gray-50 transition-transform hover:scale-105 flex items-center gap-2"
+                    >
+                        <MapPin size={16} className="text-primary" /> Otvori u Google Maps
+                    </a>
                  </div>
             </div>
 
