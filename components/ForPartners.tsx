@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X } from 'lucide-react';
 
@@ -16,7 +17,7 @@ export const ForPartners: React.FC = () => {
   };
 
   return (
-    <div className="partner-page bg-white pt-20">
+    <div className="partner-page bg-white pt-36">
       
       {/* SECTION 1: HERO */}
       <section className="partner-hero relative bg-portal-dark text-white py-16 md:py-24 overflow-hidden">

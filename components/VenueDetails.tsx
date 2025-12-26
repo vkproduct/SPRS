@@ -33,7 +33,7 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
   const isVenue = vendor.type === 'VENUE';
 
   return (
-    <div className="bg-white min-h-screen pt-20 pb-12 animate-fade-in">
+    <div className="bg-white min-h-screen pt-36 pb-12 animate-fade-in">
       {/* Navbar Placeholder / Back Button */}
       <div className="container mx-auto px-6 md:px-12 py-4 border-b border-gray-100 mb-6 flex justify-between items-center">
         <button 
@@ -218,7 +218,7 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
 
           {/* Right Column: Sticky Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-28 bg-white border border-gray-200 rounded-xl shadow-floating p-6">
+            <div className="sticky top-36 bg-white border border-gray-200 rounded-xl shadow-floating p-6">
                 
                 <div className="flex justify-between items-end mb-6">
                     <div>

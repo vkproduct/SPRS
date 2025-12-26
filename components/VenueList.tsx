@@ -94,7 +94,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
   };
 
   return (
-    <div className="pt-24 pb-20 bg-gray-50 min-h-screen">
+    <div className="pt-36 pb-20 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 md:px-8">
         
         {/* Main Layout Grid: Sidebar + Content */}
@@ -116,7 +116,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
 
           {/* LEFT SIDEBAR - Filters */}
           <aside className={`w-full lg:w-72 shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-36">
                 
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="font-bold text-lg text-portal-dark flex items-center gap-2">
