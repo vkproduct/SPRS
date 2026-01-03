@@ -1,19 +1,21 @@
 
 import React, { useState } from 'react';
 import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X } from 'lucide-react';
+import { ViewType } from '../App';
 
-export const ForPartners: React.FC = () => {
+interface ForPartnersProps {
+    onNavigate: (view: ViewType) => void;
+}
+
+export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
   };
 
-  const handleScrollToForm = () => {
-    const formElement = document.getElementById('registration-form');
-    if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handleRegisterClick = () => {
+      onNavigate('partner-auth');
   };
 
   return (
@@ -45,40 +47,24 @@ export const ForPartners: React.FC = () => {
             </div>
           </div>
 
-          {/* Registration Form in Hero */}
-          <div className="partner-hero__form lg:w-2/5 w-full bg-white text-portal-dark rounded-2xl p-6 md:p-8 shadow-2xl relative" id="registration-form">
-             <h3 className="text-2xl font-bold mb-4 text-center">Započnite besplatno</h3>
-             <form className="flex flex-col gap-4">
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Ime i prezime</label>
-                    <input type="text" className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none bg-gray-50" placeholder="Vaše ime" />
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kategorija</label>
-                    <select className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none bg-gray-50">
-                        <option value="">Izaberite uslugu...</option>
-                        <option value="venue">Restoran / Sala / Igraonica</option>
-                        <option value="photo">Fotograf / Video</option>
-                        <option value="music">Muzika / Bend / DJ</option>
-                        <option value="decor">Dekoracija / Torte</option>
-                        <option value="other">Ostalo</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Grad</label>
-                    <input type="text" className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none bg-gray-50" placeholder="npr. Beograd" />
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Telefon</label>
-                    <input type="tel" className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none bg-gray-50" placeholder="+381 6..." />
-                </div>
-                <button type="button" className="bg-primary text-white font-bold py-4 rounded-lg hover:bg-rose-600 transition-all shadow-lg transform hover:-translate-y-1 mt-2">
-                    Otvori besplatni profil
-                </button>
-                <p className="text-xs text-center text-gray-400 mt-2">
-                    Bez obaveza. Otkazivanje u svakom trenutku.
-                </p>
-             </form>
+          {/* Quick Start / Call to Action */}
+          <div className="partner-hero__form lg:w-2/5 w-full bg-white text-portal-dark rounded-2xl p-8 md:p-10 shadow-2xl relative flex flex-col justify-center items-center text-center">
+             <h3 className="text-2xl font-bold mb-4">Započnite besplatno</h3>
+             <p className="text-gray-500 mb-8">
+                Pridružite se mreži od preko 1000 profesionalaca u Srbiji. Registracija traje manje od 2 minuta.
+             </p>
+             
+             <button 
+                onClick={handleRegisterClick}
+                className="w-full bg-primary text-white font-bold py-4 rounded-lg hover:bg-rose-600 transition-all shadow-lg transform hover:-translate-y-1 text-lg flex items-center justify-center gap-2"
+             >
+                Otvori besplatni profil <ArrowRight size={20} />
+             </button>
+             
+             <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
+                 <span className="flex items-center gap-1"><Shield size={12} /> Bezbedni podaci</span>
+                 <span className="flex items-center gap-1"><DollarSign size={12} /> Bez skrivenih troškova</span>
+             </div>
           </div>
 
         </div>
@@ -206,7 +192,7 @@ export const ForPartners: React.FC = () => {
                     <h3 className="text-xl font-bold text-portal-dark mb-2">Besplatno</h3>
                     <div className="text-4xl font-bold mb-1">0€ <span className="text-lg font-normal text-gray-500">/ zauvek</span></div>
                     <p className="text-sm text-gray-500 mb-6">Za one koji tek počinju.</p>
-                    <button onClick={handleScrollToForm} className="w-full py-3 border border-portal-dark text-portal-dark font-bold rounded-lg hover:bg-gray-50 transition-colors mb-6">
+                    <button onClick={handleRegisterClick} className="w-full py-3 border border-portal-dark text-portal-dark font-bold rounded-lg hover:bg-gray-50 transition-colors mb-6">
                         Počnite besplatno
                     </button>
                     <ul className="space-y-3 text-sm">
@@ -226,7 +212,7 @@ export const ForPartners: React.FC = () => {
                     <h3 className="text-xl font-bold text-portal-dark mb-2">Standard</h3>
                     <div className="text-4xl font-bold mb-1">29€ <span className="text-lg font-normal text-gray-500">/ mes</span></div>
                     <p className="text-sm text-gray-500 mb-6">Sve što vam treba za rast.</p>
-                    <button onClick={handleScrollToForm} className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-rose-600 transition-colors mb-6 shadow-md">
+                    <button onClick={handleRegisterClick} className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-rose-600 transition-colors mb-6 shadow-md">
                         Probajte 14 dana besplatno
                     </button>
                     <ul className="space-y-3 text-sm">
@@ -243,7 +229,7 @@ export const ForPartners: React.FC = () => {
                     <h3 className="text-xl font-bold text-portal-dark mb-2">Premium</h3>
                     <div className="text-4xl font-bold mb-1">79€ <span className="text-lg font-normal text-gray-500">/ mes</span></div>
                     <p className="text-sm text-gray-500 mb-6">Dominacija u vašem gradu.</p>
-                    <button onClick={handleScrollToForm} className="w-full py-3 bg-portal-dark text-white font-bold rounded-lg hover:opacity-90 transition-colors mb-6">
+                    <button onClick={handleRegisterClick} className="w-full py-3 bg-portal-dark text-white font-bold rounded-lg hover:opacity-90 transition-colors mb-6">
                         Postanite Premium
                     </button>
                     <ul className="space-y-3 text-sm">
@@ -302,7 +288,7 @@ export const ForPartners: React.FC = () => {
             <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">Pridružite se zajednici najboljih. Bez rizika, bez skrivenih troškova. Prvi klijent vas možda već traži.</p>
             
             <button 
-                onClick={handleScrollToForm}
+                onClick={handleRegisterClick}
                 className="bg-white text-primary font-bold text-lg px-10 py-5 rounded-full shadow-xl hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
             >
                 Registrujte se besplatno <ArrowRight size={20} />

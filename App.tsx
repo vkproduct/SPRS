@@ -9,12 +9,14 @@ import { Footer } from './components/Footer';
 import { ForPartners } from './components/ForPartners';
 import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
-import { AdminAddVendor } from './components/AdminAddVendor'; // Import
+import { AdminAddVendor } from './components/AdminAddVendor'; 
+import { PartnerAuth } from './components/PartnerAuth'; // New
+import { PartnerDashboard } from './components/PartnerDashboard'; // New
 import { Vendor } from './types';
-import { db } from './lib/firebase';
+import { db, auth } from './lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details' | 'admin-add';
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -87,7 +89,7 @@ function App() {
         )}
         
         {currentView === 'partners' && (
-          <ForPartners />
+          <ForPartners onNavigate={handleNavigate} />
         )}
 
         {currentView === 'venues' && (
@@ -112,6 +114,15 @@ function App() {
 
         {currentView === 'admin-add' && (
           <AdminAddVendor onBack={() => handleNavigate('home')} />
+        )}
+
+        {/* Partner Auth Routes */}
+        {currentView === 'partner-auth' && (
+            <PartnerAuth onLoginSuccess={() => handleNavigate('partner-dashboard')} />
+        )}
+
+        {currentView === 'partner-dashboard' && (
+            <PartnerDashboard onLogout={() => handleNavigate('home')} />
         )}
       </main>
       <Footer onAdminClick={() => handleNavigate('admin-add')} />

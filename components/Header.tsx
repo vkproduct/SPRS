@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, User } from 'lucide-react';
+import { Menu, User, Briefcase } from 'lucide-react';
 import { ViewType } from '../App';
+import { auth } from '../lib/firebase';
 
 interface HeaderProps {
   onNavigate?: (view: ViewType) => void;
@@ -11,8 +12,13 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
+  const [user, setUser] = useState(auth?.currentUser);
 
   useEffect(() => {
+    const unsubscribe = auth?.onAuthStateChanged((u) => {
+        setUser(u);
+    });
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -42,15 +48,12 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearInterval(interval);
+      if(unsubscribe) unsubscribe();
     };
   }, []);
 
   const handleLogoClick = () => {
     if (onNavigate) onNavigate('home');
-  };
-
-  const handleBusinessClick = () => {
-    if (onNavigate) onNavigate('partners');
   };
   
   const handleVenuesClick = () => {
@@ -59,6 +62,15 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
 
   const handleServicesClick = () => {
     if (onNavigate) onNavigate('services');
+  };
+
+  const handlePartnerLogin = () => {
+      if (user && onNavigate) {
+          onNavigate('partner-dashboard');
+      } else if (onNavigate) {
+          // If not logged in, go to the landing page first so they see benefits
+          onNavigate('partners');
+      }
   };
 
   return (
@@ -110,21 +122,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
 
           {/* Right Actions */}
           <div className="header__actions flex-1 flex justify-end items-center gap-2">
-            {currentView === 'home' ? (
-              <div 
-                onClick={handleBusinessClick}
-                className="header__action-btn hidden md:block font-medium text-sm hover:bg-gray-100 px-4 py-3 rounded-full cursor-pointer transition-all"
-              >
-                Za biznise
-              </div>
-            ) : (
-               <div 
-                onClick={handleLogoClick}
-                className="header__action-btn hidden md:block font-medium text-sm hover:bg-gray-100 px-4 py-3 rounded-full cursor-pointer transition-all"
-              >
-                Tražim uslugu
-              </div>
-            )}
+            
+            <button 
+                onClick={handlePartnerLogin}
+                className="hidden md:flex items-center gap-2 font-medium text-sm hover:bg-gray-100 px-4 py-2 rounded-full cursor-pointer transition-all border border-gray-200"
+            >
+                <Briefcase size={16} /> {user ? 'Moj Biznis' : 'Partneri'}
+            </button>
             
             {/* User Menu Pill */}
             <div className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">

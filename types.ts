@@ -21,6 +21,9 @@ export type VendorType = 'VENUE' | 'SERVICE';
 
 export interface BaseVendor {
   id: string;
+  ownerId?: string; // Firebase Auth UID
+  pib?: string;     // Tax ID
+  mb?: string;      // Registration Number
   name: string;
   slug: string; // for url
   category_id: string; // link to category
