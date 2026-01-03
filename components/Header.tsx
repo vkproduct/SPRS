@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, User, Briefcase } from 'lucide-react';
+import { Menu, User as UserIcon, Briefcase } from 'lucide-react';
 import { ViewType } from '../App';
 import { auth } from '../lib/firebase';
+import { User } from 'firebase/auth';
 
 interface HeaderProps {
   onNavigate?: (view: ViewType) => void;
@@ -12,10 +13,10 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
-  const [user, setUser] = useState(auth?.currentUser);
+  const [user, setUser] = useState<User | null | undefined>(auth?.currentUser);
 
   useEffect(() => {
-    const unsubscribe = auth?.onAuthStateChanged((u) => {
+    const unsubscribe = auth?.onAuthStateChanged((u: User | null) => {
         setUser(u);
     });
 
@@ -134,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
             <div className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">
               <Menu size={18} className="text-gray-600" />
               <div className="header__user-avatar bg-gray-500 text-white p-1 rounded-full">
-                 <User size={18} fill="currentColor" className="text-white" />
+                 <UserIcon size={18} fill="currentColor" className="text-white" />
               </div>
             </div>
           </div>
