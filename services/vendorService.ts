@@ -1,6 +1,6 @@
 
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch, Firestore } from 'firebase/firestore';
 import { vendors as localVendors } from '../data/database';
 import { Vendor, VendorType } from '../types';
 
@@ -77,11 +77,14 @@ export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
         return false;
     }
     
+    // Fix: Assign to local const to guarantee non-null type in closure
+    const firestore: Firestore = db;
+
     try {
-        const batch = writeBatch(db);
+        const batch = writeBatch(firestore);
         
         vendorsData.forEach(vendor => {
-            const docRef = doc(collection(db, VENDORS_COLLECTION)); // Generate new ID
+            const docRef = doc(collection(firestore, VENDORS_COLLECTION)); // Generate new ID
             batch.set(docRef, vendor);
         });
 
@@ -128,12 +131,16 @@ export const submitInquiry = async (data: {
  */
 export const seedDatabase = async () => {
     if (!db) return;
+    
+    // Fix: Assign to local const
+    const firestore: Firestore = db;
+
     console.log("Starting database seed...");
     let count = 0;
     
     for (const vendor of localVendors) {
         try {
-            await setDoc(doc(db, VENDORS_COLLECTION, vendor.id), vendor);
+            await setDoc(doc(firestore, VENDORS_COLLECTION, vendor.id), vendor);
             count++;
             console.log(`Uploaded: ${vendor.name}`);
         } catch (e) {

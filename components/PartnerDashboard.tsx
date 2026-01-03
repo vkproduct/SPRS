@@ -21,7 +21,8 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (auth.currentUser) {
+            // Fix: Check if auth exists and has a current user
+            if (auth && auth.currentUser) {
                 const profile = await getMyVendorProfile(auth.currentUser.uid);
                 setVendor(profile);
                 if (profile) {
@@ -44,7 +45,9 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!vendor) return;
+        // Fix: Check if db is initialized
+        if (!vendor || !db) return;
+        
         setSaving(true);
         try {
             await updateDoc(doc(db, 'vendors', vendor.id), formData);
@@ -155,7 +158,8 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
                                 </div>
                                 <div className="col-span-2">
                                     <span className="block text-gray-400 text-xs uppercase mb-1">Email za račun</span>
-                                    <span className="font-medium">{auth.currentUser?.email}</span>
+                                    {/* Fix: Optional chaining for auth */}
+                                    <span className="font-medium">{auth?.currentUser?.email}</span>
                                 </div>
                             </div>
                         </div>
