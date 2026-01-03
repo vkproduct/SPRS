@@ -3,7 +3,7 @@
 export interface VendorCategory {
   id: string;
   name: string;
-  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other'; // Database keys
+  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other' | 'products'; // Database keys
   iconName: string;
   count: number;
   image: string;
@@ -17,7 +17,7 @@ export interface Testimonial {
   avatar: string;
 }
 
-export type VendorType = 'VENUE' | 'SERVICE';
+export type VendorType = 'VENUE' | 'SERVICE' | 'PRODUCT';
 
 export interface BaseVendor {
   id: string;
@@ -74,5 +74,16 @@ export interface ServiceVendor extends BaseVendor {
   experience_years?: number;
 }
 
+// Specifics for Products (Dresses, Suits, Rings)
+export interface ProductVendor extends BaseVendor {
+  type: 'PRODUCT';
+  product_type: string; // "Wedding Dress", "Suit", "Rings"
+  sale_options: ('SALE' | 'RENT')[]; // Can buy, rent or both
+  pricing: {
+    buy_price_from?: number;
+    rent_price_from?: number;
+  };
+}
+
 // Union type for use in components
-export type Vendor = VenueVendor | ServiceVendor;
+export type Vendor = VenueVendor | ServiceVendor | ProductVendor;

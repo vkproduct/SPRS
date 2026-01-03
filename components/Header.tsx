@@ -65,6 +65,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     if (onNavigate) onNavigate('services');
   };
 
+  const handleProductsClick = () => {
+    if (onNavigate) onNavigate('goods-categories');
+  };
+
   const handlePartnerLogin = () => {
       if (user && onNavigate) {
           onNavigate('partner-dashboard');
@@ -118,7 +122,12 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
             >
               Usluge
             </button>
-            <button className="header__nav-link font-medium text-gray-500 hover:bg-gray-100 px-4 py-2 text-sm rounded-full transition-all">Inspiracija</button>
+            <button 
+              onClick={handleProductsClick}
+              className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'goods-categories' || currentView === 'goods-list' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
+            >
+              Proizvodi
+            </button>
           </div>
 
           {/* Right Actions */}

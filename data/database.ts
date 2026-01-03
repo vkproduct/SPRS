@@ -1,13 +1,37 @@
 
 import { Vendor, VendorCategory } from '../types';
 
-// 1. Categories Table
+// 1. Categories Table (Main Categories)
 export const categories: VendorCategory[] = [
   { id: '1', slug: 'venues', name: 'Restorani i Sale', iconName: 'Home', count: 120, image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80' },
   { id: '2', slug: 'photographers', name: 'Fotografi', iconName: 'Camera', count: 85, image: 'https://images.unsplash.com/photo-1520854221256-17451cc330e7?auto=format&fit=crop&w=800&q=80' },
   { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
   { id: '4', slug: 'cakes', name: 'Torte', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
   { id: '5', slug: 'decoration', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
+];
+
+// Specific Venue Types for the Filter Dropdown
+export const venueSubcategories = [
+    { id: 'Restoran', name: 'Restoran' },
+    { id: 'Svečana sala', name: 'Svečana sala (Banket)' }, // Maps to Event Centar/Hall
+    { id: 'Šator', name: 'Šator' },
+    { id: 'Veranda', name: 'Veranda' },
+    { id: 'Hotel', name: 'Restoran u hotelu' },
+    { id: 'Klub', name: 'Seoski klub / Etnoselo' },
+    { id: 'Loft', name: 'Loft' },
+    { id: 'Splav', name: 'Splav / Jaht klub' },
+    { id: 'Vila', name: 'Vila / Osobnik' }
+];
+
+// Specific Product Types
+export const productSubcategories = [
+    { id: 'Venčanice', name: 'Venčanice', image: 'https://images.unsplash.com/photo-1594552072238-b8a33785b261?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Odela', name: 'Muška Odela', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Burme', name: 'Burme i Nakit', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Cipele', name: 'Obuća', image: 'https://images.unsplash.com/photo-1549643444-0985223c6838?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Pozivnice', name: 'Pozivnice', image: 'https://images.unsplash.com/photo-1551642875-97e3a985df77?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Pokloni', name: 'Pokloni za goste', image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&w=800&q=80' },
+    { id: 'Dekoracija', name: 'Dekoracija (Prodaja)', image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Helper images
@@ -24,6 +48,13 @@ const images = {
     music: [
         "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80"
+    ],
+    dresses: [
+        "https://images.unsplash.com/photo-1594552072238-b8a33785b261?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1549416878-b9ca95e282de?auto=format&fit=crop&w=1200&q=80"
+    ],
+    rings: [
+         "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=80"
     ]
 };
 
@@ -94,7 +125,7 @@ export const vendors: Vendor[] = [
         pricing: { per_person_from: 80, per_person_to: 130 }
     },
 
-    // --- PHOTOGRAPHERS (New Data) ---
+    // --- PHOTOGRAPHERS ---
     {
         id: 'p-1',
         type: 'SERVICE',
@@ -136,7 +167,7 @@ export const vendors: Vendor[] = [
         experience_years: 12
     },
 
-    // --- MUSIC (New Data) ---
+    // --- MUSIC ---
     {
         id: 'm-1',
         type: 'SERVICE',
@@ -157,24 +188,66 @@ export const vendors: Vendor[] = [
         pricing: { package_from: 2500 },
         experience_years: 10
     },
+    
+    // --- PRODUCTS (New Data) ---
     {
-        id: 'm-2',
-        type: 'SERVICE',
-        name: "DJ Alex",
-        slug: "dj-alex",
-        category_id: '3',
-        service_type: "DJ",
-        address: "Palilula",
-        city: "Niš",
-        cover_image: images.music[1],
-        gallery: images.music,
+        id: 'prod-1',
+        type: 'PRODUCT',
+        name: "Salon Venčanica 'Bella'",
+        slug: "salon-bella",
+        category_id: 'Venčanice', // Matches subcategory ID
+        product_type: "Venčanice",
+        address: "Terazije 12",
+        city: "Beograd",
+        cover_image: images.dresses[0],
+        gallery: images.dresses,
+        rating: 4.9,
+        reviews_count: 220,
+        price_range_symbol: '€€',
+        description: "Najnoviji modeli svetskih dizajnera. Pronađite haljinu iz snova.",
+        features: ["Vera Wang", "Pronovias", "Šivenje po meri", "Besplatne probe"],
+        sale_options: ['SALE', 'RENT'],
+        contact: { phone: "+38162123456", email: "info@bella.rs" },
+        pricing: { buy_price_from: 1200, rent_price_from: 400 }
+    },
+    {
+        id: 'prod-2',
+        type: 'PRODUCT',
+        name: "Zlatara 'Infinitum'",
+        slug: "zlatara-infinitum",
+        category_id: 'Burme',
+        product_type: "Burme",
+        address: "Zmaj Jovina 4",
+        city: "Novi Sad",
+        cover_image: images.rings[0],
+        gallery: images.rings,
         rating: 4.8,
-        reviews_count: 30,
+        reviews_count: 55,
+        price_range_symbol: '€€',
+        description: "Ručno rađene burme od belog, žutog i roze zlata sa dijamantima.",
+        features: ["Doživotna garancija", "Besplatno graviranje", "Sertifikat"],
+        sale_options: ['SALE'],
+        contact: { phone: "+38121123456", email: "shop@infinitum.rs" },
+        pricing: { buy_price_from: 300 }
+    },
+    {
+        id: 'prod-3',
+        type: 'PRODUCT',
+        name: "Magic Dress Atelier",
+        slug: "magic-dress",
+        category_id: 'Venčanice',
+        product_type: "Venčanice",
+        address: "Bulevar Nemanjića 25",
+        city: "Niš",
+        cover_image: images.dresses[1],
+        gallery: images.dresses,
+        rating: 4.7,
+        reviews_count: 34,
         price_range_symbol: '€',
-        description: "Moderni hitovi za urbane svadbe i punoletstva.",
-        features: ["Rasveta", "Dim", "House & Pop"],
-        contact: { phone: "+38165777888", email: "dj@alex.rs" },
-        pricing: { package_from: 300, hourly_rate: 50 },
-        experience_years: 4
+        description: "Pristupačne i moderne venčanice za mlade koje znaju šta žele.",
+        features: ["Rasprodaja", "Outlet", "Hemijsko čišćenje"],
+        sale_options: ['RENT'],
+        contact: { phone: "+38163999888", email: "nis@magicdress.rs" },
+        pricing: { rent_price_from: 250 }
     }
 ];

@@ -10,13 +10,14 @@ import { ForPartners } from './components/ForPartners';
 import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
 import { AdminAddVendor } from './components/AdminAddVendor'; 
-import { PartnerAuth } from './components/PartnerAuth'; // New
-import { PartnerDashboard } from './components/PartnerDashboard'; // New
+import { PartnerAuth } from './components/PartnerAuth';
+import { PartnerDashboard } from './components/PartnerDashboard';
+import { GoodsCategories } from './components/GoodsCategories'; // New
 import { Vendor } from './types';
 import { db, auth } from './lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard';
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -60,6 +61,11 @@ function App() {
     }
   };
 
+  const handleGoodsCategoryClick = (categoryId: string) => {
+    setTargetCategory(categoryId);
+    handleNavigate('goods-list');
+  }
+
   const handleVendorSelect = (vendor: Vendor) => {
     setSelectedVendor(vendor);
     setCurrentView('venue-details');
@@ -69,6 +75,8 @@ function App() {
   const handleBack = () => {
     if (selectedVendor?.type === 'VENUE') {
         setCurrentView('venues');
+    } else if (selectedVendor?.type === 'PRODUCT') {
+        setCurrentView('goods-list');
     } else {
         setCurrentView('services');
     }
@@ -105,6 +113,19 @@ function App() {
             onVenueSelect={handleVendorSelect} 
             initialCategoryId={targetCategory} 
             filterType="SERVICE"
+          />
+        )}
+
+        {/* Goods / Products Views */}
+        {currentView === 'goods-categories' && (
+           <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
+        )}
+
+        {currentView === 'goods-list' && (
+          <VenueList 
+            onVenueSelect={handleVendorSelect} 
+            initialCategoryId={targetCategory} 
+            filterType="PRODUCT"
           />
         )}
 

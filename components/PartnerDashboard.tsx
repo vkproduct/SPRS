@@ -21,14 +21,19 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     useEffect(() => {
         const fetchProfile = async () => {
-            // Fix: Check if auth exists and has a current user
+            // SCENARIO 1: Real Firebase
             if (auth && auth.currentUser) {
                 const profile = await getMyVendorProfile(auth.currentUser.uid);
                 setVendor(profile);
-                if (profile) {
-                    setFormData(profile);
-                }
+                if (profile) setFormData(profile);
+            } 
+            // SCENARIO 2: Mock Mode (Firebase not init)
+            else if (!auth) {
+                const profile = await getMyVendorProfile('mock-uid');
+                setVendor(profile);
+                if (profile) setFormData(profile);
             }
+            
             setLoading(false);
         };
         fetchProfile();
@@ -45,10 +50,19 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Fix: Check if db is initialized
-        if (!vendor || !db) return;
-        
         setSaving(true);
+        
+        // Mock Save
+        if (!db) {
+            await new Promise(r => setTimeout(r, 600)); // Fake delay
+            setVendor({ ...vendor, ...formData });
+            alert("Profil uspešno ažuriran! (Lokalna simulacija)");
+            setSaving(false);
+            return;
+        }
+
+        // Real Save
+        if (!vendor) return;
         try {
             await updateDoc(doc(db, 'vendors', vendor.id), formData);
             setVendor({ ...vendor, ...formData });
@@ -159,7 +173,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
                                 <div className="col-span-2">
                                     <span className="block text-gray-400 text-xs uppercase mb-1">Email za račun</span>
                                     {/* Fix: Optional chaining for auth */}
-                                    <span className="font-medium">{auth?.currentUser?.email}</span>
+                                    <span className="font-medium">{auth?.currentUser?.email || (vendor.contact?.email)}</span>
                                 </div>
                             </div>
                         </div>

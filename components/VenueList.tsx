@@ -1,14 +1,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Users, Euro, Filter, ChevronDown, SlidersHorizontal, ArrowUpRight, MessageCircle, Camera, Music, Video, X } from 'lucide-react';
-import { categories } from '../data/database'; // We still keep categories local for now
+import { Search, MapPin, Users, Euro, Filter, ChevronDown, SlidersHorizontal, ArrowUpRight, MessageCircle, Camera, Music, ShoppingBag, Check } from 'lucide-react';
+import { categories, venueSubcategories, productSubcategories } from '../data/database'; 
 import { getVendors } from '../services/vendorService';
 import { Vendor, VendorType } from '../types';
 
 interface VenueListProps {
   onVenueSelect?: (venue: Vendor) => void;
   initialCategoryId?: string | null;
-  filterType?: VendorType; // 'VENUE' or 'SERVICE'
+  filterType?: VendorType; // 'VENUE', 'SERVICE', 'PRODUCT'
 }
 
 export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCategoryId, filterType }) => {
@@ -16,6 +16,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [minCapacity, setMinCapacity] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+  const [saleOption, setSaleOption] = useState<'all' | 'SALE' | 'RENT'>('all'); // New filter for Products
   const [showFilters, setShowFilters] = useState(false);
   
   // State for data
@@ -35,26 +36,23 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
   useEffect(() => {
       const fetchData = async () => {
           setLoading(true);
-          const data = await getVendors(filterType, selectedCategoryId);
+          const data = await getVendors(filterType, selectedCategoryId === 'all' || filterType === 'VENUE' || filterType === 'PRODUCT' ? undefined : selectedCategoryId);
           setVendors(data);
           setLoading(false);
       };
       fetchData();
-  }, [filterType, selectedCategoryId]); // Re-fetch when major filters change
+  }, [filterType, selectedCategoryId]);
 
   // Determine which categories are available based on filterType
   const availableCategories = useMemo(() => {
-      if (!filterType) return categories;
-      
-      return categories.filter(cat => {
-          // Optimization: Ideally this check should also be dynamic, but for now we keep static check
-          return true; 
-      });
+      if (filterType === 'VENUE') return venueSubcategories;
+      if (filterType === 'PRODUCT') return productSubcategories;
+      return categories.filter(cat => cat.slug !== 'venues');
   }, [filterType]);
 
   const filteredVendors = useMemo(() => {
     return vendors.filter(vendor => {
-      // 0. Strict Type Filter (already handled by service, but good for safety)
+      // 0. Strict Type Filter
       if (filterType && vendor.type !== filterType) {
           return false;
       }
@@ -64,8 +62,31 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                             vendor.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             vendor.city.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // 2. Filter by Category (already handled by service, but search bar resets 'all')
-      const matchesCategory = selectedCategoryId === 'all' || vendor.category_id === selectedCategoryId;
+      // 2. Filter by Category / Type
+      let matchesCategory = true;
+      if (selectedCategoryId !== 'all') {
+          if (filterType === 'VENUE') {
+              // Fuzzy matching for Venue Subtypes
+              const vType = (vendor as any).venue_type || '';
+              if (selectedCategoryId === 'Svečana sala') {
+                   matchesCategory = ['EVENT CENTAR', 'EVENT HALL', 'SVEČANA SALA'].some(t => vType.includes(t));
+              } else if (selectedCategoryId === 'Hotel') {
+                   matchesCategory = vType.includes('HOTEL');
+              } else if (selectedCategoryId === 'Splav') {
+                   matchesCategory = vType.includes('SPLAV');
+              } else if (selectedCategoryId === 'Restoran') {
+                   matchesCategory = vType.includes('RESTORAN');
+              } else {
+                  matchesCategory = vType.toLowerCase().includes(selectedCategoryId.toLowerCase());
+              }
+          } else if (filterType === 'PRODUCT') {
+             // Product Category Match
+             matchesCategory = (vendor as any).category_id === selectedCategoryId;
+          } else {
+              // Service Category Match
+              matchesCategory = vendor.category_id === selectedCategoryId;
+          }
+      }
       
       // 3. Filter by Capacity (Only for VENUES)
       let matchesCapacity = true;
@@ -79,36 +100,54 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
         const max = parseInt(maxPrice);
         if (vendor.type === 'VENUE') {
              matchesPrice = vendor.pricing.per_person_from <= max;
-        } else {
+        } else if (vendor.type === 'SERVICE') {
              if (vendor.pricing.package_from) {
                 matchesPrice = vendor.pricing.package_from <= max;
              }
+        } else if (vendor.type === 'PRODUCT') {
+            const buy = vendor.pricing.buy_price_from || 999999;
+            const rent = vendor.pricing.rent_price_from || 999999;
+            matchesPrice = buy <= max || rent <= max;
         }
       }
 
-      return matchesSearch && matchesCategory && matchesCapacity && matchesPrice;
-    });
-  }, [vendors, searchTerm, selectedCategoryId, minCapacity, maxPrice, filterType]);
+      // 5. Filter by Sale Option (Only for PRODUCTS)
+      let matchesSaleOption = true;
+      if (filterType === 'PRODUCT' && saleOption !== 'all') {
+          matchesSaleOption = (vendor as any).sale_options?.includes(saleOption);
+      }
 
-  const activeCategory = categories.find(c => c.id === selectedCategoryId);
+      return matchesSearch && matchesCategory && matchesCapacity && matchesPrice && matchesSaleOption;
+    });
+  }, [vendors, searchTerm, selectedCategoryId, minCapacity, maxPrice, filterType, saleOption]);
+
+  // Helper to get display name
+  const getActiveCategoryName = () => {
+      if (selectedCategoryId === 'all') return null;
+      if (filterType === 'VENUE') return venueSubcategories.find(c => c.id === selectedCategoryId)?.name;
+      if (filterType === 'PRODUCT') return productSubcategories.find(c => c.id === selectedCategoryId)?.name;
+      return categories.find(c => c.id === selectedCategoryId)?.name;
+  };
+  const activeCategoryName = getActiveCategoryName();
   
   // Text configuration based on filterType
-  const pageTitle = filterType === 'VENUE' ? 'Pronađite idealan prostor' : (filterType === 'SERVICE' ? 'Profesionalne usluge' : 'Svi rezultati');
+  const pageTitle = filterType === 'VENUE' ? 'Pronađite idealan prostor' : (filterType === 'SERVICE' ? 'Profesionalne usluge' : 'Katalog Proizvoda');
   const pageSubtitle = loading 
     ? 'Učitavanje...' 
     : (filterType === 'VENUE' 
         ? `Pronađeno ${filteredVendors.length} restorana i sala` 
-        : `Pronađeno ${filteredVendors.length} profesionalaca`);
+        : `Pronađeno ${filteredVendors.length} rezultata`);
   
-  const placeholderText = filterType === 'VENUE' ? "Ime prostora, grad..." : "Fotograf, bend, grad...";
-  const pricePlaceholder = filterType === 'VENUE' ? "Max € po osobi" : "Max € (paket)";
-  const categoryLabel = filterType === 'VENUE' ? "Svi prostori" : (filterType === 'SERVICE' ? "Sve usluge" : "Sve kategorije");
+  const placeholderText = filterType === 'VENUE' ? "Ime prostora, grad..." : (filterType === 'PRODUCT' ? "Venčanica, odelo..." : "Fotograf, bend, grad...");
+  const pricePlaceholder = filterType === 'VENUE' ? "Max € po osobi" : "Max €";
+  const categoryLabel = filterType === 'VENUE' ? "Tip prostora" : (filterType === 'PRODUCT' ? "Tip proizvoda" : "Kategorija usluge");
 
   const resetFilters = () => {
     setSearchTerm(''); 
     setSelectedCategoryId('all'); 
     setMinCapacity(''); 
     setMaxPrice('');
+    setSaleOption('all');
   };
 
   return (
@@ -140,7 +179,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                     <h3 className="font-bold text-lg text-portal-dark flex items-center gap-2">
                         <Filter size={20} /> Filteri
                     </h3>
-                    {(searchTerm || selectedCategoryId !== 'all' || minCapacity || maxPrice) && (
+                    {(searchTerm || selectedCategoryId !== 'all' || minCapacity || maxPrice || saleOption !== 'all') && (
                         <button 
                             onClick={resetFilters}
                             className="text-xs text-primary font-semibold hover:underline"
@@ -168,14 +207,14 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
 
                     {/* Category Select */}
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Kategorija</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">{categoryLabel}</label>
                         <div className="relative">
                             <select 
                             className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-3 pr-10 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer text-sm"
                             value={selectedCategoryId}
                             onChange={(e) => setSelectedCategoryId(e.target.value)}
                             >
-                            <option value="all">{categoryLabel}</option>
+                            <option value="all">Sve</option>
                             {availableCategories.map(cat => (
                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
                             ))}
@@ -183,6 +222,33 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
                         </div>
                     </div>
+
+                    {/* Product Options (Buy/Rent) */}
+                    {filterType === 'PRODUCT' && (
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Opcija</label>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setSaleOption('all')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg border ${saleOption === 'all' ? 'bg-portal-dark text-white border-portal-dark' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                    Sve
+                                </button>
+                                <button 
+                                    onClick={() => setSaleOption('SALE')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg border ${saleOption === 'SALE' ? 'bg-portal-dark text-white border-portal-dark' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                    Kupovina
+                                </button>
+                                <button 
+                                    onClick={() => setSaleOption('RENT')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg border ${saleOption === 'RENT' ? 'bg-portal-dark text-white border-portal-dark' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                    Najam
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Capacity Filter (Conditional) */}
                     {filterType === 'VENUE' && (
@@ -225,7 +291,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
             {/* Header Area */}
             <div className="mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-portal-dark mb-2">
-                    {activeCategory ? activeCategory.name : pageTitle}
+                    {activeCategoryName ? activeCategoryName : pageTitle}
                 </h1>
                 <p className="text-portal-gray">{pageSubtitle}</p>
             </div>
@@ -252,16 +318,17 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded text-xs font-bold text-portal-dark uppercase tracking-wide">
-                        {vendor.type === 'VENUE' ? vendor.venue_type : vendor.service_type}
+                        {vendor.type === 'VENUE' ? vendor.venue_type : (vendor.type === 'PRODUCT' ? (vendor as any).product_type : (vendor as any).service_type)}
                         </div>
                         
                         {/* Price Tag Logic */}
                         <div className="absolute bottom-3 right-3 bg-portal-dark text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
                         {vendor.type === 'VENUE' 
                             ? `od ${vendor.pricing.per_person_from}€ / os` 
-                            : (vendor.pricing.package_from 
-                                ? `od ${vendor.pricing.package_from}€` 
-                                : `${vendor.pricing.hourly_rate}€ / h`)
+                            : (vendor.type === 'PRODUCT' 
+                                ? (vendor.pricing.buy_price_from ? `${vendor.pricing.buy_price_from}€` : `Najam ${vendor.pricing.rent_price_from}€`) 
+                                : (vendor.pricing.package_from ? `od ${vendor.pricing.package_from}€` : `${vendor.pricing.hourly_rate}€ / h`)
+                              )
                         }
                         </div>
                     </div>
@@ -288,6 +355,11 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                                 <>
                                     <Users size={14} className="text-primary" />
                                     <span>{vendor.capacity.min} - {vendor.capacity.max}</span>
+                                </>
+                            ) : vendor.type === 'PRODUCT' ? (
+                                <>
+                                    <ShoppingBag size={14} className="text-primary" />
+                                    <span>{(vendor as any).sale_options?.includes('SALE') && (vendor as any).sale_options?.includes('RENT') ? 'Prodaja i Najam' : ((vendor as any).sale_options?.includes('RENT') ? 'Samo Najam' : 'Prodaja')}</span>
                                 </>
                             ) : (
                                 <>
