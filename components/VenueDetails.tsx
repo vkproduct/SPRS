@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
 import { 
-  MapPin, Users, Euro, Check, X, Music, Camera, Car, 
-  Utensils, Calendar, ChevronLeft, ChevronRight, Star, Share2, Heart,
-  Mail, Phone, Clock
+  MapPin, Users, Euro, Check, X, Star, Share2, Heart,
+  Mail, Phone, Clock, ChevronLeft, ChevronRight, ShoppingBag
 } from 'lucide-react';
-import { Vendor } from '../types';
+import { Vendor, ProductVendor, ServiceVendor, VenueVendor } from '../types';
 import { submitInquiry } from '../services/vendorService';
 
 interface VenueDetailsProps {
@@ -95,6 +94,21 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
   const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const externalMapUrl = vendor.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
+  // Helper to get type-safe pricing display
+  const renderPriceInfo = () => {
+      if (vendor.type === 'VENUE') {
+          return `od ${vendor.pricing.per_person_from}€ / os`;
+      } else if (vendor.type === 'PRODUCT') {
+          const p = vendor.pricing;
+          return p.buy_price_from ? `od ${p.buy_price_from}€` : `najam od ${p.rent_price_from}€`;
+      } else {
+          // Service
+          return vendor.pricing.package_from 
+            ? `od ${vendor.pricing.package_from}€` 
+            : `${vendor.pricing.hourly_rate}€ / h`;
+      }
+  };
+
   return (
     <div className="bg-white min-h-screen pt-36 pb-12 animate-fade-in">
       
@@ -170,7 +184,7 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
             </span>
             <span className="hidden md:inline">·</span>
             <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide text-gray-600">
-                {isVenue ? vendor.venue_type : vendor.service_type}
+                {vendor.type === 'VENUE' ? vendor.venue_type : (vendor.type === 'PRODUCT' ? (vendor as ProductVendor).product_type : (vendor as ServiceVendor).service_type)}
             </span>
           </div>
         </div>
@@ -220,12 +234,14 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
             {/* Quick Stats Bar */}
             <div className="flex justify-between items-center py-6 border-b border-gray-100">
                 <div className="flex flex-col gap-1">
-                    <span className="text-gray-500 text-sm">{isVenue ? 'Kapacitet' : 'Iskustvo'}</span>
+                    <span className="text-gray-500 text-sm">
+                        {isVenue ? 'Kapacitet' : (vendor.type === 'PRODUCT' ? 'Info' : 'Iskustvo')}
+                    </span>
                     <span className="font-semibold text-lg flex items-center gap-2">
-                        {isVenue ? <Users size={20} className="text-portal-dark" /> : <Clock size={20} className="text-portal-dark" />}
+                        {isVenue ? <Users size={20} className="text-portal-dark" /> : (vendor.type === 'PRODUCT' ? <ShoppingBag size={20} className="text-portal-dark"/> : <Clock size={20} className="text-portal-dark" />)}
                         {isVenue 
                             ? `${vendor.capacity.min} - ${vendor.capacity.max} osoba`
-                            : `${(vendor as any).experience_years || 2}+ godina`
+                            : (vendor.type === 'PRODUCT' ? 'Dostupno' : `${(vendor as ServiceVendor).experience_years || 2}+ godina`)
                         }
                     </span>
                 </div>
@@ -234,19 +250,14 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
                     <span className="text-gray-500 text-sm">Cena</span>
                     <span className="font-semibold text-lg flex items-center gap-2">
                         <Euro size={20} className="text-portal-dark" /> 
-                        {isVenue 
-                             ? `od ${vendor.pricing.per_person_from}€ / os` 
-                             : (vendor.pricing.package_from 
-                                  ? `od ${vendor.pricing.package_from}€` 
-                                  : `${vendor.pricing.hourly_rate}€ / h`)
-                        }
+                        {renderPriceInfo()}
                     </span>
                 </div>
                 <div className="w-[1px] h-10 bg-gray-100"></div>
                  <div className="flex flex-col gap-1">
                     <span className="text-gray-500 text-sm">Tip</span>
                     <span className="font-semibold text-lg capitalize">
-                        {isVenue ? 'Prostor' : 'Usluga'}
+                        {vendor.type === 'VENUE' ? 'Prostor' : (vendor.type === 'PRODUCT' ? 'Proizvod' : 'Usluga')}
                     </span>
                 </div>
             </div>
@@ -347,13 +358,18 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
                 <div className="flex justify-between items-end mb-6">
                     <div>
                         <span className="text-2xl font-bold text-portal-dark">
-                             {isVenue 
-                             ? `€${vendor.pricing.per_person_from}` 
-                             : `€${vendor.pricing.package_from || vendor.pricing.hourly_rate}`
-                            }
+                            {(() => {
+                                if (vendor.type === 'VENUE') return `€${vendor.pricing.per_person_from}`;
+                                if (vendor.type === 'PRODUCT') return `€${vendor.pricing.buy_price_from || vendor.pricing.rent_price_from}`;
+                                return `€${vendor.pricing.package_from || vendor.pricing.hourly_rate}`;
+                            })()}
                         </span>
                         <span className="text-gray-500 text-sm">
-                             {isVenue ? ' / po osobi' : (vendor.pricing.package_from ? ' / paket' : ' / sat')}
+                            {(() => {
+                                if (vendor.type === 'VENUE') return ' / po osobi';
+                                if (vendor.type === 'PRODUCT') return ' / komad';
+                                return vendor.pricing.package_from ? ' / paket' : ' / sat';
+                            })()}
                         </span>
                     </div>
                     <div className="text-sm text-gray-500 underline">
@@ -370,7 +386,7 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
                             </div>
                             <div className="border border-gray-300 rounded-lg p-2">
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase">
-                                    {isVenue ? 'Gosti' : 'Sati'}
+                                    {isVenue ? 'Gosti' : 'Količina'}
                                 </label>
                                 <input type="number" onChange={handleInputChange} placeholder="Br." className="w-full text-sm outline-none text-portal-dark" min="1" required />
                             </div>
