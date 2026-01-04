@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Search } from 'lucide-react';
 
@@ -8,9 +9,9 @@ export const Hero: React.FC = () => {
         
         {/* Search Bar - Airbnb Style */}
         <div className="hero__search-bar hidden md:flex justify-center mb-10">
-          <div className="bg-white rounded-full shadow-floating border border-gray-200 flex items-center p-2 max-w-4xl w-full">
+          <div className="bg-white rounded-full shadow-floating border border-gray-200 flex p-2 max-w-4xl w-full">
             
-            <div className="hero__search-item flex-1 px-8 py-3 hover:bg-gray-100 rounded-full cursor-pointer relative group">
+            <div className="hero__search-item flex-1 px-8 py-3 hover:bg-gray-100 rounded-full cursor-pointer relative group flex flex-col justify-center">
               <label className="block text-xs font-bold text-portal-dark">Gde</label>
               <input 
                 type="text" 
@@ -20,7 +21,7 @@ export const Hero: React.FC = () => {
               <div className="absolute right-0 top-3 bottom-3 w-[1px] bg-gray-200 group-hover:hidden"></div>
             </div>
 
-            <div className="hero__search-item flex-1 px-8 py-3 hover:bg-gray-100 rounded-full cursor-pointer relative group">
+            <div className="hero__search-item flex-1 px-8 py-3 hover:bg-gray-100 rounded-full cursor-pointer relative group flex flex-col justify-center">
               <label className="block text-xs font-bold text-portal-dark">Povod</label>
               <div className="text-sm text-gray-500 truncate">Svadba, Rođendan, Firma...</div>
               <div className="absolute right-0 top-3 bottom-3 w-[1px] bg-gray-200 group-hover:hidden"></div>
