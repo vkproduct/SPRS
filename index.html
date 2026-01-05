@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html lang="sr-RS">
+<html lang="sr-RS" prefix="og: http://ogp.me/ns#">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     
+    <!-- Geo Tags for Local SEO (Serbia/Belgrade focus) -->
+    <meta name="geo.region" content="RS" />
+    <meta name="geo.placename" content="Belgrade" />
+    <meta name="geo.position" content="44.7866;20.4489" />
+    <meta name="ICBM" content="44.7866, 20.4489" />
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect x=%220%22 y=%220%22 width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23FF385C%22 /><path fill=%22white%22 d=%22M16,26l-1.8-1.6C7.9,18.6,3.7,14.8,3.7,10.1C3.7,6.3,6.7,3.3,10.5,3.3c2.1,0,4.2,1,5.5,2.6c1.3-1.6,3.4-2.6,5.5-2.6c3.8,0,6.8,3,6.8,6.8c0,4.7-4.2,8.5-10.5,14.2L16,26z%22/></svg>" />
 
-    <!-- SEO Meta Tags -->
-    <title>Organizacija Proslava Srbija | Venčanja, Rođendani, Firme - SveZaProslavu.rs</title>
-    <meta name="description" content="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, sale za korporativne proslave, fotografe i muziku na jednom mestu." />
-    <meta name="keywords" content="organizacija proslava, iznajmljivanje prostora srbija, 18. rođendan, korporativne proslave, sale za svadbe, proslava krštenja, fotografi, dekoracija, event centri beograd" />
+    <!-- SEO Meta Tags Default (Will be overwritten by JS) -->
+    <title>SveZaProslavu.rs - Organizacija proslava u Srbiji</title>
+    <meta name="description" content="Pronađite prostor, muziku i fotografa za vaše venčanje, rođendan ili proslavu. Najveći vodič za organizaciju događaja u Beogradu i Srbiji." />
+    <meta name="keywords" content="organizacija proslava, restorani za svadbe beograd, sale za proslave, fotografi srbija, bendovi za svadbe" />
     <meta name="author" content="SveZaProslavu.rs" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://svezaproslavu.rs/" />
@@ -22,13 +28,13 @@
     <meta property="og:description" content="Planirate proslavu? Istražite preko 1000 prostora za venčanja, rođendane i korporativne događaje u Srbiji. Besplatan planer budžeta." />
     <meta property="og:image" content="https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" />
     <meta property="og:locale" content="sr_RS" />
+    <meta property="og:site_name" content="SveZaProslavu.rs" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://svezaproslavu.rs/" />
-    <meta property="twitter:title" content="SveZaProslavu.rs | Vodič za organizaciju svih vrsta događaja" />
-    <meta property="twitter:description" content="Restorani, sale, muzika i dekoracija za venčanja, rođendane i poslovne proslave." />
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SveZaProslavu.rs - Organizacija proslava" />
+    <meta name="twitter:description" content="Najbolji prostori i usluge za proslave u Srbiji." />
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" />
 
     <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -86,16 +92,15 @@
     "react/": "https://esm.sh/react@^19.2.3/",
     "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
     "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body class="bg-white antialiased">
     <div id="root"></div>
-    <!-- CRITICAL: This connects the HTML to your React code via Vite -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

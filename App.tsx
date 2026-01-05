@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -12,7 +11,8 @@ import { VenueDetails } from './components/VenueDetails';
 import { AdminAddVendor } from './components/AdminAddVendor'; 
 import { PartnerAuth } from './components/PartnerAuth';
 import { PartnerDashboard } from './components/PartnerDashboard';
-import { GoodsCategories } from './components/GoodsCategories'; // New
+import { GoodsCategories } from './components/GoodsCategories';
+import { SEOManager } from './components/SEOManager'; // Import SEO
 import { Vendor } from './types';
 import { db, auth } from './lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
@@ -24,28 +24,35 @@ function App() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [targetCategory, setTargetCategory] = useState<string | null>(null);
 
-  // Debug: Check Firebase connection on mount
+  // Connection check
   useEffect(() => {
     const checkConnection = async () => {
-      if (!db) {
-        console.log("%c⚠️ Firebase config missing or invalid. Check .env file.", "color: orange; font-weight: bold; font-size: 14px;");
-        return;
-      }
+      if (!db) return;
       try {
-        console.log("%c🔄 Testing Firebase connection...", "color: blue;");
         const q = query(collection(db, 'vendors'), limit(1));
         await getDocs(q);
-        console.log("%c✅ Firebase Connected Successfully!", "color: green; font-weight: bold; font-size: 16px; background: #e6fffa; padding: 4px; border-radius: 4px;");
       } catch (error) {
-        console.error("%c❌ Firebase Connection Failed:", "color: red; font-weight: bold; font-size: 16px;", error);
+        console.error("Firebase Connection Failed:", error);
       }
     };
     checkConnection();
   }, []);
 
-  const handleNavigate = (view: ViewType) => {
+  const handleNavigate = (view: ViewType, subParam?: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setCurrentView(view);
+    
+    // SEO: Update Browser URL without reload
+    let path = '/';
+    if (view === 'venues') path = '/venues';
+    else if (view === 'services') path = '/services';
+    else if (view === 'goods-categories') path = '/goods';
+    else if (view === 'goods-list') path = '/goods/list';
+    else if (view === 'partners') path = '/partners';
+    else if (view === 'venue-details' && selectedVendor) path = `/vendor/${selectedVendor.slug}`;
+    
+    window.history.pushState({}, '', path);
+
     if (view !== 'venue-details') {
       setSelectedVendor(null);
       setTargetCategory(null);
@@ -69,18 +76,35 @@ function App() {
   const handleVendorSelect = (vendor: Vendor) => {
     setSelectedVendor(vendor);
     setCurrentView('venue-details');
+    // Update URL immediately
+    window.history.pushState({}, '', `/vendor/${vendor.slug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     if (selectedVendor?.type === 'VENUE') {
-        setCurrentView('venues');
+        handleNavigate('venues');
     } else if (selectedVendor?.type === 'PRODUCT') {
-        setCurrentView('goods-list');
+        handleNavigate('goods-list');
     } else {
-        setCurrentView('services');
+        handleNavigate('services');
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- JSON-LD GENERATION ---
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "SveZaProslavu.rs",
+    "url": "https://svezaproslavu.rs",
+    "logo": "https://svezaproslavu.rs/logo.png",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+381-11-123-4567",
+      "contactType": "customer service",
+      "areaServed": "RS",
+      "availableLanguage": ["Serbian", "English"]
+    }
   };
 
   return (
@@ -89,6 +113,11 @@ function App() {
       <main>
         {currentView === 'home' && (
           <>
+            <SEOManager 
+              title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
+              description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
+              jsonLd={organizationSchema}
+            />
             <Hero />
             <Categories onCategoryClick={handleCategoryClick} />
             <AiPlanner />
@@ -97,28 +126,55 @@ function App() {
         )}
         
         {currentView === 'partners' && (
-          <ForPartners onNavigate={handleNavigate} />
+          <>
+            <SEOManager 
+              title="Postanite Partner | SveZaProslavu.rs"
+              description="Registrujte svoj restoran, bend ili agenciju. Popunite termine tokom cele godine."
+              canonical="https://svezaproslavu.rs/partners"
+            />
+            <ForPartners onNavigate={handleNavigate} />
+          </>
         )}
 
         {currentView === 'venues' && (
-          <VenueList 
-            onVenueSelect={handleVendorSelect} 
-            initialCategoryId={targetCategory} 
-            filterType="VENUE"
-          />
+          <>
+             <SEOManager 
+              title="Sale za Svadbe i Proslave Beograd, Novi Sad | SveZaProslavu.rs"
+              description="Istražite najbolje restorane, sale za venčanja i prostore za događaje u Srbiji. Pogledajte cene, slike i kapacitete."
+              canonical="https://svezaproslavu.rs/venues"
+            />
+            <VenueList 
+              onVenueSelect={handleVendorSelect} 
+              initialCategoryId={targetCategory} 
+              filterType="VENUE"
+            />
+          </>
         )}
 
         {currentView === 'services' && (
-          <VenueList 
-            onVenueSelect={handleVendorSelect} 
-            initialCategoryId={targetCategory} 
-            filterType="SERVICE"
-          />
+          <>
+            <SEOManager 
+              title="Muzika, Fotografi i Dekoracija za Proslave | SveZaProslavu.rs"
+              description="Pronađite bendove za svadbe, profesionalne fotografe i dekoratere za vaš događaj."
+              canonical="https://svezaproslavu.rs/services"
+            />
+            <VenueList 
+              onVenueSelect={handleVendorSelect} 
+              initialCategoryId={targetCategory} 
+              filterType="SERVICE"
+            />
+          </>
         )}
 
-        {/* Goods / Products Views */}
         {currentView === 'goods-categories' && (
-           <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
+           <>
+            <SEOManager 
+              title="Venčanice, Odela i Pozivnice | SveZaProslavu.rs Shop"
+              description="Katalog venčanica, muških odela, burmi i poklona za goste. Kupovina i iznajmljivanje."
+              canonical="https://svezaproslavu.rs/goods"
+            />
+            <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
+           </>
         )}
 
         {currentView === 'goods-list' && (
@@ -137,9 +193,11 @@ function App() {
           <AdminAddVendor onBack={() => handleNavigate('home')} />
         )}
 
-        {/* Partner Auth Routes */}
         {currentView === 'partner-auth' && (
-            <PartnerAuth onLoginSuccess={() => handleNavigate('partner-dashboard')} />
+             <>
+             <SEOManager title="Prijava za Partnere" description="Pristupite svom biznis nalogu." />
+             <PartnerAuth onLoginSuccess={() => handleNavigate('partner-dashboard')} />
+             </>
         )}
 
         {currentView === 'partner-dashboard' && (
