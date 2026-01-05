@@ -222,6 +222,9 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                     <option value="3">3 - Muzika</option>
                     <option value="4">4 - Torte</option>
                     <option value="5">5 - Dekoracija</option>
+                    <option value="6">6 - Videografi</option>
+                    <option value="7">7 - Voditelji</option>
+                    <option value="8">8 - Šminka i Frizura</option>
                 </select>
                 </div>
             </div>

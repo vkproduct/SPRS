@@ -3,7 +3,7 @@
 export interface VendorCategory {
   id: string;
   name: string;
-  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other' | 'products'; // Database keys
+  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other' | 'products' | 'videography' | 'hosts' | 'beauty'; // Database keys
   iconName: string;
   count: number;
   image: string;

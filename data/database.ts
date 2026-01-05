@@ -8,6 +8,9 @@ export const categories: VendorCategory[] = [
   { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
   { id: '4', slug: 'cakes', name: 'Torte', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
   { id: '5', slug: 'decoration', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
+  { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535953392429-1b5e533d15d6?auto=format&fit=crop&w=800&q=80' },
+  { id: '7', slug: 'hosts', name: 'Voditelji', iconName: 'Mic', count: 28, image: 'https://images.unsplash.com/photo-1544983058-2954a7c13cb5?auto=format&fit=crop&w=800&q=80' },
+  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Specific Venue Types for the Filter Dropdown
