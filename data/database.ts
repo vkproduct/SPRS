@@ -4,13 +4,13 @@ import { Vendor, VendorCategory } from '../types';
 // 1. Categories Table (Main Categories)
 export const categories: VendorCategory[] = [
   { id: '1', slug: 'venues', name: 'Restorani i Sale', iconName: 'Home', count: 120, image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80' },
-  { id: '2', slug: 'photographers', name: 'Fotografi', iconName: 'Camera', count: 85, image: 'https://images.unsplash.com/photo-1520854221256-17451cc330e7?auto=format&fit=crop&w=800&q=80' },
+  { id: '2', slug: 'photographers', name: 'Fotografi', iconName: 'Camera', count: 85, image: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=800&q=80' },
   { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
   { id: '4', slug: 'cakes', name: 'Torte', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
   { id: '5', slug: 'decoration', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
-  { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535953392429-1b5e533d15d6?auto=format&fit=crop&w=800&q=80' },
-  { id: '7', slug: 'hosts', name: 'Voditelji', iconName: 'Mic', count: 28, image: 'https://images.unsplash.com/photo-1544983058-2954a7c13cb5?auto=format&fit=crop&w=800&q=80' },
-  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=800&q=80' },
+  { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1588483977959-badc9893d432?auto=format&fit=crop&w=800&q=80' },
+  { id: '7', slug: 'hosts', name: 'Voditelji', iconName: 'Mic', count: 28, image: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac6d5?auto=format&fit=crop&w=800&q=80' },
+  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1522337360705-2b1cc3d549e6?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Specific Venue Types for the Filter Dropdown
