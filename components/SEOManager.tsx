@@ -4,7 +4,7 @@ interface SEOManagerProps {
   title: string;
   description: string;
   canonical?: string;
-  type?: 'website' | 'article' | 'business' | 'product';
+  type?: string;
   image?: string;
   jsonLd?: Record<string, any>;
 }
