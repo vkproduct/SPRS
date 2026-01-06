@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X } from 'lucide-react';
+
+import React, { useState, useMemo } from 'react';
+import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X, Gift } from 'lucide-react';
 import { ViewType } from '../App';
 import { SEOManager } from './SEOManager';
 
@@ -7,8 +8,15 @@ interface ForPartnersProps {
     onNavigate: (view: ViewType) => void;
 }
 
+type PartnerCategory = 'venue' | 'media' | 'service';
+type BillingPeriod = 'monthly' | 'yearly';
+
 export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  
+  // Pricing State
+  const [selectedCategory, setSelectedCategory] = useState<PartnerCategory>('venue');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
@@ -17,6 +25,48 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
   const handleRegisterClick = () => {
       onNavigate('partner-auth');
   };
+
+  // Pricing Logic
+  const pricingData = useMemo(() => {
+      let basePrice = 0;
+      let discountPercent = 0;
+      let title = "";
+
+      switch (selectedCategory) {
+          case 'venue':
+              basePrice = 69; // Restorani, Sale
+              discountPercent = 20; // 20% discount (Updated from 30%)
+              title = "Restorani i Sale";
+              break;
+          case 'media':
+              basePrice = 29; // Fotografi, Muzika
+              discountPercent = 20; // 20% discount
+              title = "Foto, Video i Muzika";
+              break;
+          case 'service':
+              basePrice = 13; // Dekoracija, Torte, Ostalo
+              discountPercent = 20; // 20% discount
+              title = "Dekoracija, Torte i Ostalo";
+              break;
+      }
+
+      // Calculate Single Paid Plan
+      const monthly = basePrice;
+      const yearlyTotal = basePrice * 12 * ((100 - discountPercent) / 100);
+      const yearlyMonthlyEq = yearlyTotal / 12;
+
+      return {
+          title,
+          discountPercent,
+          plan: {
+              monthly: monthly,
+              yearlyTotal: Math.round(yearlyTotal),
+              yearlyMonthlyEq: parseFloat(yearlyMonthlyEq.toFixed(1))
+          }
+      };
+  }, [selectedCategory]);
+
+  const currentPrice = billingPeriod === 'monthly' ? pricingData.plan.monthly : pricingData.plan.yearlyMonthlyEq;
 
   // FAQ Schema Data
   const faqs = [
@@ -145,61 +195,122 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* SECTION 6: PRICING */}
-      <section className="partner-pricing py-20 bg-portal-bg" id="cenovnik">
+      {/* SECTION 6: PRICING (SPLIT LAYOUT) */}
+      <section className="partner-pricing py-24 bg-portal-bg" id="cenovnik">
          <div className="container mx-auto px-6 md:px-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-portal-dark mb-4">Transparentne cene</h2>
-            <p className="text-center text-gray-500 mb-16">Bez skrivenih troškova. Plaćate samo ako ste zadovoljni.</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
+            <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
                 
-                {/* Free Plan */}
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 className="text-xl font-bold text-portal-dark mb-2">Besplatno</h3>
-                    <div className="text-4xl font-bold mb-1">0€ <span className="text-lg font-normal text-gray-500">/ zauvek</span></div>
-                    <p className="text-sm text-gray-500 mb-6">Za one koji tek počinju.</p>
-                    <button onClick={handleRegisterClick} className="w-full py-3 border border-portal-dark text-portal-dark font-bold rounded-lg hover:bg-gray-50 transition-colors mb-6">
-                        Počnite besplatno
-                    </button>
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Osnovni profil</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Do 5 fotografija</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Prikaz u pretrazi</li>
-                    </ul>
-                </div>
+                {/* LEFT SIDE: CONTROLS */}
+                <div className="w-full lg:w-1/3 lg:sticky lg:top-24">
+                    <h2 className="text-3xl md:text-4xl font-bold text-portal-dark mb-4 leading-tight">
+                        Transparentne cene bez skrivenih troškova
+                    </h2>
+                    <p className="text-gray-500 mb-8 text-lg">
+                        Prilagodili smo pakete vašem tipu poslovanja. Izaberite kategoriju da biste videli tačnu cenu.
+                    </p>
 
-                {/* Standard Plan */}
-                <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-primary relative transform md:scale-105 z-10">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                        Najpopularnije
+                    {/* 1. Category Selector */}
+                    <div className="mb-8">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Vaša delatnost</label>
+                        <div className="relative">
+                            <select 
+                                className="w-full appearance-none bg-white border-2 border-gray-200 text-portal-dark font-bold text-lg py-4 px-6 rounded-xl focus:outline-none focus:border-primary shadow-sm cursor-pointer transition-colors"
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value as PartnerCategory)}
+                            >
+                                <option value="venue">Restorani, Sale, Hoteli, Imanja</option>
+                                <option value="media">Fotografi, Video, Bendovi, DJ</option>
+                                <option value="service">Dekoracija, Torte, Šminka, Prevoz</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+                                <ChevronDown size={24} />
+                            </div>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold text-portal-dark mb-2">Standard</h3>
-                    <div className="text-4xl font-bold mb-1">29€ <span className="text-lg font-normal text-gray-500">/ mes</span></div>
-                    <p className="text-sm text-gray-500 mb-6">Sve što vam treba za rast.</p>
-                    <button onClick={handleRegisterClick} className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-rose-600 transition-colors mb-6 shadow-md">
-                        Probajte 14 dana besplatno
-                    </button>
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> <strong>Sve iz Besplatnog</strong></li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Neograničene slike</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Istaknuti profil</li>
-                    </ul>
+
+                    {/* 2. Billing Toggle */}
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm inline-flex flex-col w-full">
+                        <div className="flex justify-between items-center mb-2">
+                             <span className="text-sm font-bold text-gray-500">Način plaćanja</span>
+                             {billingPeriod === 'yearly' && (
+                                <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                                    Štedite {pricingData.discountPercent}%
+                                </span>
+                             )}
+                        </div>
+                        <div className="flex items-center gap-4 cursor-pointer" onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}>
+                            <div className={`w-14 h-8 flex items-center rounded-full p-1 duration-300 ease-in-out ${billingPeriod === 'yearly' ? 'bg-primary' : 'bg-gray-300'}`}>
+                                <div className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ease-in-out ${billingPeriod === 'yearly' ? 'translate-x-6' : ''}`}></div>
+                            </div>
+                            <span className="font-medium text-portal-dark">
+                                {billingPeriod === 'yearly' ? 'Godišnja pretplata' : 'Mesečna pretplata'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Premium Plan */}
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 className="text-xl font-bold text-portal-dark mb-2">Premium</h3>
-                    <div className="text-4xl font-bold mb-1">79€ <span className="text-lg font-normal text-gray-500">/ mes</span></div>
-                    <p className="text-sm text-gray-500 mb-6">Dominacija u vašem gradu.</p>
-                    <button onClick={handleRegisterClick} className="w-full py-3 bg-portal-dark text-white font-bold rounded-lg hover:opacity-90 transition-colors mb-6">
-                        Postanite Premium
-                    </button>
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> <strong>Sve iz Standarda</strong></li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Zagarantovan TOP 3</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500" /> Email promocija</li>
-                    </ul>
+                {/* RIGHT SIDE: CARDS */}
+                <div className="w-full lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+                    
+                    {/* Free Plan */}
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col hover:border-gray-300 transition-colors">
+                        <h3 className="text-xl font-bold text-portal-dark mb-2">Besplatno</h3>
+                        <div className="text-4xl font-bold mb-1">0€ <span className="text-lg font-normal text-gray-500">/ zauvek</span></div>
+                        <p className="text-sm text-gray-500 mb-6">Za one koji tek počinju i žele osnovno prisustvo.</p>
+                        
+                        <div className="w-full h-[1px] bg-gray-100 mb-6"></div>
+
+                        <ul className="space-y-4 text-sm mb-8 flex-1">
+                            <li className="flex gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500 shrink-0" /> Osnovni profil u pretrazi</li>
+                            <li className="flex gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500 shrink-0" /> Do 5 fotografija</li>
+                            <li className="flex gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500 shrink-0" /> Prikaz kontakt telefona</li>
+                            <li className="flex gap-3 text-gray-400 opacity-50"><X size={18} className="shrink-0" /> Bez linka ka sajtu/Instagramu</li>
+                            <li className="flex gap-3 text-gray-400 opacity-50"><X size={18} className="shrink-0" /> Ograničena vidljivost</li>
+                        </ul>
+                        <button onClick={handleRegisterClick} className="w-full py-3 border-2 border-gray-200 text-portal-dark font-bold rounded-xl hover:border-portal-dark hover:bg-gray-50 transition-all">
+                            Počnite besplatno
+                        </button>
+                    </div>
+
+                    {/* Premium Plan (Dynamic) */}
+                    <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-primary relative flex flex-col">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-md whitespace-nowrap">
+                            Preporuka za {pricingData.title}
+                        </div>
+                        <h3 className="text-xl font-bold text-portal-dark mb-2">Premium Partner</h3>
+                        <div className="flex items-baseline gap-1 mb-1">
+                            <span className="text-4xl font-bold text-primary">{currentPrice}€</span>
+                            <span className="text-lg font-normal text-gray-500">/ mes</span>
+                        </div>
+                        
+                        {/* Savings Badge */}
+                        <div className="h-6 mb-6">
+                            {billingPeriod === 'yearly' ? (
+                                <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
+                                    Plaćate {pricingData.plan.yearlyTotal}€ godišnje
+                                </span>
+                            ) : (
+                                <span className="text-xs text-gray-400">Plaćanje na mesečnom nivou</span>
+                            )}
+                        </div>
+
+                        <div className="w-full h-[1px] bg-gray-100 mb-6"></div>
+
+                        <ul className="space-y-4 text-sm mb-8 flex-1">
+                            <li className="flex gap-3 text-gray-700 font-medium"><CheckCircle size={18} className="text-primary shrink-0" /> <strong>Sve iz Besplatnog</strong></li>
+                            <li className="flex gap-3 text-gray-700"><CheckCircle size={18} className="text-primary shrink-0" /> Neograničene slike i video</li>
+                            <li className="flex gap-3 text-gray-700"><CheckCircle size={18} className="text-primary shrink-0" /> Linkovi ka sajtu i mrežama</li>
+                            <li className="flex gap-3 text-gray-700"><CheckCircle size={18} className="text-primary shrink-0" /> <span className="font-bold text-portal-dark">TOP pozicije</span> u pretrazi</li>
+                            <li className="flex gap-3 text-gray-700"><CheckCircle size={18} className="text-primary shrink-0" /> Oznaka "Verified Partner"</li>
+                            <li className="flex gap-3 text-gray-700"><CheckCircle size={18} className="text-primary shrink-0" /> Odgovaranje na recenzije</li>
+                        </ul>
+                        <button onClick={handleRegisterClick} className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-rose-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            Postanite Premium Partner
+                        </button>
+                    </div>
                 </div>
+
             </div>
          </div>
       </section>
