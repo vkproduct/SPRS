@@ -87,3 +87,15 @@ export interface ProductVendor extends BaseVendor {
 
 // Union type for use in components
 export type Vendor = VenueVendor | ServiceVendor | ProductVendor;
+
+export interface Inquiry {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  userName: string;
+  contact: string;
+  date: string; // Event date
+  guestCount: number;
+  status: 'new' | 'read' | 'replied';
+  createdAt: any; // Firestore Timestamp
+}

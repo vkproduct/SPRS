@@ -1,11 +1,12 @@
 
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch, Firestore } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch, Firestore, updateDoc, deleteDoc, orderBy, getDoc } from 'firebase/firestore';
 import { vendors as localVendors } from '../data/database';
-import { Vendor, VendorType } from '../types';
+import { Vendor, VendorType, Inquiry } from '../types';
 
 const VENDORS_COLLECTION = 'vendors';
 const INQUIRIES_COLLECTION = 'inquiries';
+const SETTINGS_COLLECTION = 'settings';
 
 // Helper to filter local data (DRY principle)
 const getLocalFiltered = (filterType?: VendorType, categoryId?: string) => {
@@ -69,6 +70,35 @@ export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
 };
 
 /**
+ * Updates an existing Vendor
+ */
+export const updateVendor = async (id: string, vendorData: Partial<Vendor>) => {
+    if (!db) return false;
+    try {
+        const docRef = doc(db, VENDORS_COLLECTION, id);
+        await updateDoc(docRef, vendorData);
+        return true;
+    } catch (error) {
+        console.error("Error updating vendor:", error);
+        return false;
+    }
+};
+
+/**
+ * Deletes a Vendor
+ */
+export const deleteVendor = async (id: string) => {
+    if (!db) return false;
+    try {
+        await deleteDoc(doc(db, VENDORS_COLLECTION, id));
+        return true;
+    } catch (error) {
+        console.error("Error deleting vendor:", error);
+        return false;
+    }
+};
+
+/**
  * Adds multiple vendors at once (Batch)
  */
 export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
@@ -77,7 +107,6 @@ export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
         return false;
     }
     
-    // Fix: Assign to local const to guarantee non-null type in closure
     const firestore: Firestore = db;
 
     try {
@@ -127,12 +156,71 @@ export const submitInquiry = async (data: {
 };
 
 /**
+ * Get all inquiries (Admin)
+ */
+export const getInquiries = async (): Promise<Inquiry[]> => {
+    if (!db) return [];
+    try {
+        // Order by date desc
+        const q = query(collection(db, INQUIRIES_COLLECTION), orderBy('createdAt', 'desc'));
+        const snap = await getDocs(q);
+        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Inquiry));
+    } catch (error) {
+        console.error("Error getting inquiries:", error);
+        return [];
+    }
+};
+
+/**
+ * Update Inquiry Status
+ */
+export const updateInquiryStatus = async (id: string, status: 'new' | 'read' | 'replied') => {
+    if (!db) return false;
+    try {
+        await updateDoc(doc(db, INQUIRIES_COLLECTION, id), { status });
+        return true;
+    } catch (error) {
+        console.error("Error updating inquiry:", error);
+        return false;
+    }
+};
+
+/**
+ * Get Site Content (Homepage settings)
+ */
+export const getSiteContent = async () => {
+  if (!db) return null;
+  try {
+    const docRef = doc(db, SETTINGS_COLLECTION, 'homepage');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) return snap.data();
+    return null;
+  } catch (error) {
+    console.error("Error fetching site content:", error);
+    return null;
+  }
+};
+
+/**
+ * Update Site Content
+ */
+export const updateSiteContent = async (data: any) => {
+  if (!db) return false;
+  try {
+    await setDoc(doc(db, SETTINGS_COLLECTION, 'homepage'), data, { merge: true });
+    return true;
+  } catch (error) {
+    console.error("Error updating site content:", error);
+    return false;
+  }
+};
+
+/**
  * ONE-TIME USE: Uploads local data to Firebase.
  */
 export const seedDatabase = async () => {
     if (!db) return;
     
-    // Fix: Assign to local const
     const firestore: Firestore = db;
 
     console.log("Starting database seed...");

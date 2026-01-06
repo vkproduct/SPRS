@@ -1,0 +1,73 @@
+
+import React, { useState } from 'react';
+import { Lock, ArrowRight, ShieldCheck, Home } from 'lucide-react';
+
+interface AdminLoginProps {
+  onLogin: () => void;
+}
+
+export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simple hardcoded check for demonstration (In prod, use Firebase Auth)
+    if (password === 'admin' || password === 'sveza2025' || password === 'admin123') {
+      onLogin();
+    } else {
+      setError('Pogrešna lozinka. Pokušajte ponovo.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 animate-fade-in pt-20">
+      <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        <div className="text-center mb-8">
+          <div className="bg-portal-dark w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg transform rotate-3">
+            <ShieldCheck size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-portal-dark">Admin Pristup</h1>
+          <p className="text-gray-500 text-sm mt-2">Sigurnosna provera za pristup panelu.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Pristupna šifra</label>
+                <div className="relative">
+                    <Lock className="absolute left-4 top-4 text-gray-400" size={18} />
+                    <input 
+                        type="password" 
+                        autoFocus
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-lg bg-gray-50 focus:bg-white"
+                        placeholder="Unesite lozinku..."
+                    />
+                </div>
+            </div>
+
+            {error && (
+                <div className="text-red-500 text-sm font-medium text-center bg-red-50 p-3 rounded-lg border border-red-100 flex items-center justify-center gap-2">
+                    {error}
+                </div>
+            )}
+
+            <button 
+                type="submit" 
+                className="w-full bg-portal-dark text-white font-bold py-4 rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
+            >
+                Pristupi Panelu <ArrowRight size={20} />
+            </button>
+        </form>
+        
+        <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <a href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors font-medium">
+                <Home size={16} /> Nazad na početnu
+            </a>
+            <p className="text-xs text-gray-400 mt-4">Zaštićena zona. Svi pristupi se beleže.</p>
+        </div>
+      </div>
+    </div>
+  );
+};

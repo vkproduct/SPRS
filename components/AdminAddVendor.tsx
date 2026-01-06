@@ -1,36 +1,148 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Save, Upload, Download, FileText, Plus, Trash2 } from 'lucide-react';
-import { addVendor, addVendorsBatch } from '../services/vendorService';
+import { addVendor, addVendorsBatch, updateVendor } from '../services/vendorService';
+import { Vendor } from '../types';
+
+// 1. КОНСТАНТЫ (Определены снаружи компонента)
+const VENUE_SUBCATEGORIES = [
+    { id: 'Restoran', name: 'Restoran' },
+    { id: 'Svečana sala', name: 'Svečana sala (Banket)' },
+    { id: 'Šator', name: 'Šator' },
+    { id: 'Veranda', name: 'Veranda' },
+    { id: 'Hotel', name: 'Restoran u hotelu' },
+    { id: 'Klub', name: 'Seoski klub / Etnoselo' },
+    { id: 'Loft', name: 'Loft' },
+    { id: 'Splav', name: 'Splav / Jaht klub' },
+    { id: 'Vila', name: 'Vila / Osobnik' }
+];
 
 interface AdminAddVendorProps {
   onBack: () => void;
+  initialData?: Vendor | null;
 }
 
-export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
-  const [loading, setLoading] = useState(false);
+export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialData }) => {
+  // 2. БЕЗОПАСНЫЕ DEFAULTS
+  const defaultVenueType = VENUE_SUBCATEGORIES[0]?.id || 'Restoran';
+  const isEditMode = !!initialData;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Single Entry State
+
+  // 3. СОСТОЯНИЕ (STATE)
+  const [loading, setLoading] = useState(false);
+  const [galleryInputs, setGalleryInputs] = useState<string[]>([]);
   const [formData, setFormData] = useState<any>({
     type: 'VENUE',
     name: '',
     address: '',
     city: 'Beograd',
     category_id: '1',
+    venue_type: defaultVenueType,
     description: '',
     price_from: '',
     capacity_min: '',
     capacity_max: '',
-    cover_image: '', // Main image
+    cover_image: '', 
     phone: '',
     email: '',
     google_maps_url: ''
   });
 
-  // Extra gallery images (up to 9 more, total 10)
-  const [galleryInputs, setGalleryInputs] = useState<string[]>([]);
+  // 4. ЭФФЕКТЫ (Инициализация данных)
+  useEffect(() => {
+    if (initialData) {
+        setFormData({
+            type: initialData.type,
+            name: initialData.name,
+            address: initialData.address,
+            city: initialData.city,
+            category_id: initialData.category_id,
+            venue_type: (initialData as any).venue_type || defaultVenueType,
+            description: initialData.description || '',
+            price_from: initialData.type === 'VENUE' ? initialData.pricing?.per_person_from : (initialData.pricing as any)?.package_from,
+            capacity_min: initialData.type === 'VENUE' ? initialData.capacity?.min : '',
+            capacity_max: initialData.type === 'VENUE' ? initialData.capacity?.max : '',
+            cover_image: initialData.cover_image || '',
+            phone: initialData.contact?.phone || '',
+            email: initialData.contact?.email || '',
+            google_maps_url: initialData.google_maps_url || ''
+        });
+        
+        if (initialData.gallery && initialData.gallery.length > 1) {
+            setGalleryInputs(initialData.gallery.slice(1));
+        }
+    }
+  }, [initialData, defaultVenueType]);
 
+  // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (Определены до использования в handleSubmit)
+  const safeStr = (val: any): string => {
+    if (val === null || val === undefined) return '';
+    return String(val).trim();
+  };
+
+  const safeInt = (val: any, defaultVal = 0): number => {
+    const parsed = parseInt(String(val).replace(/[^0-9]/g, ''));
+    return isNaN(parsed) ? defaultVal : parsed;
+  };
+
+  const constructVendorObject = (data: any) => {
+    const imagesList = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 
+        ? data.gallery 
+        : [safeStr(data.cover_image) || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'];
+
+    const safeName = safeStr(data.name) || 'Nepoznato';
+    const safeType = (safeStr(data.type) || 'VENUE').toUpperCase();
+    
+    let slug = safeName.toLowerCase()
+        .replace(/ć/g, 'c').replace(/č/g, 'c').replace(/š/g, 's').replace(/đ/g, 'dj').replace(/ž/g, 'z')
+        .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+    
+    if (slug.endsWith('-')) slug = slug.slice(0, -1);
+    if (!slug) slug = `vendor-${Date.now()}`;
+
+    const newVendor: any = {
+      type: safeType,
+      name: safeName,
+      slug: slug,
+      category_id: safeStr(data.category_id) || '1',
+      address: safeStr(data.address),
+      city: safeStr(data.city) || 'Beograd',
+      google_maps_url: safeStr(data.google_maps_url),
+      description: safeStr(data.description),
+      cover_image: imagesList[0] || '', 
+      gallery: imagesList,
+      rating: initialData?.rating || 5.0,
+      reviews_count: initialData?.reviews_count || 0,
+      price_range_symbol: '€€',
+      features: ['WiFi', 'Parking'], 
+      contact: {
+        phone: safeStr(data.phone),
+        email: safeStr(data.email)
+      }
+    };
+
+    if (newVendor.type === 'VENUE') {
+      newVendor.venue_type = safeStr(data.venue_type) || 'Restoran';
+      newVendor.capacity = {
+        min: safeInt(data.capacity_min),
+        max: safeInt(data.capacity_max, 100),
+        seated: safeInt(data.capacity_max, 100),
+        cocktail: safeInt(data.capacity_max, 100)
+      };
+      newVendor.pricing = {
+        per_person_from: safeInt(data.price_from)
+      };
+    } else {
+      newVendor.service_type = 'Usluga';
+      newVendor.pricing = {
+        package_from: safeInt(data.price_from)
+      };
+    }
+    
+    return JSON.parse(JSON.stringify(newVendor));
+  };
+
+  // 6. ОБРАБОТЧИКИ СОБЫТИЙ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -53,77 +165,37 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
     setGalleryInputs(newInputs);
   };
 
-  // --- MANUAL SUBMIT ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Combine cover + additional images
-    const fullGallery = [formData.cover_image, ...galleryInputs].filter(url => url && url.trim().length > 0);
-    
-    // Pass the explicitly constructed gallery
-    const newVendor = constructVendorObject({ ...formData, gallery: fullGallery });
-    const success = await addVendor(newVendor);
-    setLoading(false);
-
-    if (success) {
-      alert("Uspešno dodato! Novi profil je sada u bazi.");
-      onBack();
+    try {
+        const fullGallery = [formData.cover_image, ...galleryInputs].filter(url => url && url.trim().length > 0);
+        // Теперь функция constructVendorObject гарантированно существует
+        const vendorPayload = constructVendorObject({ ...formData, gallery: fullGallery });
+        
+        let success;
+        if (isEditMode && initialData?.id) {
+             success = await updateVendor(initialData.id, vendorPayload);
+        } else {
+             success = await addVendor(vendorPayload);
+        }
+        
+        if (success) {
+          alert(isEditMode ? "Uspešno ažurirano!" : "Uspešno dodato!");
+          onBack();
+        }
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Greška pri čuvanju данных. Проверьте консоль.");
+    } finally {
+        setLoading(false);
     }
-  };
-
-  // --- CSV HELPER FUNCTIONS ---
-
-  const constructVendorObject = (data: any) => {
-    // Use provided gallery or fallback to single cover image
-    const imagesList = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 
-        ? data.gallery 
-        : [data.cover_image || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'];
-
-    const newVendor: any = {
-      type: data.type.toUpperCase(),
-      name: data.name,
-      slug: data.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, ''),
-      category_id: data.category_id,
-      address: data.address,
-      city: data.city,
-      google_maps_url: data.google_maps_url || '',
-      description: data.description || '',
-      cover_image: imagesList[0], // First image is cover
-      gallery: imagesList,
-      rating: 5.0,
-      reviews_count: 0,
-      price_range_symbol: '€€',
-      features: ['WiFi', 'Parking'], 
-      contact: {
-        phone: data.phone || '',
-        email: data.email || ''
-      }
-    };
-
-    if (newVendor.type === 'VENUE') {
-      newVendor.venue_type = 'EVENT CENTAR';
-      newVendor.capacity = {
-        min: parseInt(data.capacity_min) || 0,
-        max: parseInt(data.capacity_max) || 100,
-        seated: parseInt(data.capacity_max) || 100,
-        cocktail: parseInt(data.capacity_max) || 100
-      };
-      newVendor.pricing = {
-        per_person_from: parseInt(data.price_from) || 0
-      };
-    } else {
-      newVendor.service_type = 'Usluga';
-      newVendor.pricing = {
-        package_from: parseInt(data.price_from) || 0
-      };
-    }
-    return newVendor;
   };
 
   const downloadTemplate = () => {
-    const headers = "type,name,category_id,city,address,price_from,capacity_min,capacity_max,cover_image,phone,description";
-    const example = "VENUE,Restoran Nova Era,1,Beograd,Adresa 10,45,50,250,https://img1.com/a.jpg;https://img2.com/b.jpg,+381641234567,Opis restorana...";
+    const headers = "type;name;category_id;venue_type;city;address;price_from;capacity_min;capacity_max;cover_image;phone;description";
+    const example = "VENUE;Restoran Nova Era;1;Restoran;Beograd;Adresa 10;45;50;250;https://img1.com/a.jpg|https://img2.com/b.jpg;+381641234567;Opis restorana...";
     const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -139,55 +211,78 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
-        const text = evt.target?.result as string;
-        if (!text) return;
+        try {
+            const text = evt.target?.result as string;
+            if (!text) return;
 
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-        // Skip header row
-        const dataRows = lines.slice(1);
-        
-        const parsedVendors: any[] = [];
-
-        dataRows.forEach(row => {
-            // Simple split by comma
-            const cols = row.split(',');
-            if (cols.length < 5) return; // Skip invalid rows
-
-            // Handle multiple images in column 8 (split by ;)
-            const imageCol = cols[8] || '';
-            const allImages = imageCol.split(';').map(s => s.trim()).filter(s => s);
-
-            const rawData = {
-                type: cols[0],
-                name: cols[1],
-                category_id: cols[2],
-                city: cols[3],
-                address: cols[4],
-                price_from: cols[5],
-                capacity_min: cols[6],
-                capacity_max: cols[7],
-                cover_image: allImages[0], // First one
-                gallery: allImages,        // All of them
-                phone: cols[9],
-                description: cols[10]
-            };
-
-            parsedVendors.push(constructVendorObject(rawData));
-        });
-
-        if (parsedVendors.length > 0) {
-            if (window.confirm(`Pronađeno ${parsedVendors.length} profila. Želite li da ih otpremite?`)) {
-                setLoading(true);
-                const success = await addVendorsBatch(parsedVendors);
-                setLoading(false);
-                if (success) {
-                    alert(`Uspešno uvezeno ${parsedVendors.length} profila!`);
-                    if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
-                    onBack();
-                }
+            const cleanText = text.replace(/^--- START OF FILE .* ---\n/, '');
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) {
+                alert("CSV fajl nema dovoljno podataka.");
+                return;
             }
-        } else {
-            alert("Nismo uspeli da pročitamo podatke. Proverite format CSV fajla.");
+
+            const dataRows = lines.slice(1);
+            const parsedVendors: any[] = [];
+
+            dataRows.forEach((row) => {
+                if (!row) return;
+                const delimiter = row.indexOf(';') !== -1 ? ';' : ',';
+                const cols = row.split(delimiter);
+                
+                if (cols.length < 2) return;
+                
+                // Простая эвристика парсинга
+                let rawData: any = {};
+                
+                // Проверка на достаточность колонок
+                if (cols.length >= 10) {
+                     let allImages: string[] = [];
+                     const imgCol = cols.length > 9 ? cols[9] : cols[8];
+                     if (imgCol) {
+                        allImages = imgCol.split(/[|;]/).map(s => s.trim()).filter(s => s);
+                     }
+                     
+                     rawData = {
+                        type: cols[0],
+                        name: cols[1],
+                        category_id: cols[2],
+                        venue_type: cols[3],
+                        city: cols[4],
+                        address: cols[5],
+                        price_from: cols[6],
+                        capacity_min: cols[7],
+                        capacity_max: cols[8],
+                        cover_image: allImages[0] || '', 
+                        gallery: allImages,        
+                        phone: cols.length > 10 ? cols[10] : '',
+                        description: cols.length > 11 ? cols.slice(11).join(' ') : ''
+                    };
+
+                    if (safeStr(rawData.name) && safeStr(rawData.type)) {
+                        parsedVendors.push(constructVendorObject(rawData));
+                    }
+                }
+            });
+
+            if (parsedVendors.length > 0) {
+                if (window.confirm(`Pronađeno ${parsedVendors.length} profila. Želite li da ih otpremite?`)) {
+                    setLoading(true);
+                    const success = await addVendorsBatch(parsedVendors);
+                    setLoading(false);
+                    if (success) {
+                        alert(`Uspešno uvezeno ${parsedVendors.length} profila!`);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        onBack();
+                    }
+                }
+            } else {
+                alert("Nismo uspeli da parsiramo podatke. Proverite format CSV-a.");
+            }
+        } catch (error) {
+            console.error("CSV Parse Error:", error);
+            alert("Greška pri čitanju fajla.");
+            setLoading(false);
         }
     };
     reader.readAsText(file);
@@ -195,20 +290,24 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
 
   return (
     <div className="pt-36 pb-20 container mx-auto px-6 max-w-4xl">
-      <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-portal-dark mb-6">
-        <ChevronLeft size={20} /> Nazad
-      </button>
+      <div className="flex justify-between items-center mb-6">
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-portal-dark">
+            <ChevronLeft size={20} /> Nazad
+        </button>
+        <h1 className="text-2xl font-bold text-portal-dark">
+            {isEditMode ? 'Izmeni Profil' : 'Dodaj Novi Profil'}
+        </h1>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN: Manual Form */}
+        {/* MANUAL FORM */}
         <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-            <h1 className="text-2xl font-bold mb-6 text-portal-dark">Ručni unos</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
             
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tip profila</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tip</label>
                 <select name="type" value={formData.type} onChange={handleChange} className="w-full p-3 border rounded-lg bg-gray-50">
                     <option value="VENUE">Prostor (Restoran/Sala)</option>
                     <option value="SERVICE">Usluga (Foto/Muzika)</option>
@@ -229,9 +328,25 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 </div>
             </div>
 
+            {formData.type === 'VENUE' && (
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tip Prostora</label>
+                    <select 
+                        name="venue_type" 
+                        value={formData.venue_type} 
+                        onChange={handleChange} 
+                        className="w-full p-3 border rounded-lg bg-gray-50 border-primary/30"
+                    >
+                        {VENUE_SUBCATEGORIES.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
             <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Naziv</label>
-                <input name="name" required value={formData.name} onChange={handleChange} className="w-full p-3 border rounded-lg" placeholder="npr. Restoran Zlatni Dvor" />
+                <input name="name" required value={formData.name} onChange={handleChange} className="w-full p-3 border rounded-lg" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -245,22 +360,14 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 </div>
             </div>
 
-            <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Google Maps Link (Opciono)</label>
-                <input name="google_maps_url" value={formData.google_maps_url} onChange={handleChange} className="w-full p-3 border rounded-lg" placeholder="https://goo.gl/maps/..." />
-                <p className="text-[10px] text-gray-400 mt-1">Ako ostavite prazno, mapa će se generisati automatski na osnovu adrese.</p>
-            </div>
-
             {/* GALLERY SECTION */}
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Galerija Slika (Max 10)</label>
                 
-                {/* Main Cover Image */}
                 <div className="mb-3">
                     <input name="cover_image" required value={formData.cover_image} onChange={handleChange} className="w-full p-3 border rounded-lg bg-white" placeholder="Glavna slika (URL)..." />
                 </div>
 
-                {/* Additional Images */}
                 <div className="space-y-2">
                     {galleryInputs.map((url, index) => (
                         <div key={index} className="flex gap-2">
@@ -270,38 +377,28 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                                 className="w-full p-3 border rounded-lg bg-white" 
                                 placeholder={`Slika #${index + 2} (URL)...`} 
                             />
-                            <button 
-                                type="button" 
-                                onClick={() => handleRemoveGalleryInput(index)}
-                                className="p-3 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100"
-                            >
+                            <button type="button" onClick={() => handleRemoveGalleryInput(index)} className="p-3 text-red-500 hover:bg-red-50 rounded-lg">
                                 <Trash2 size={20} />
                             </button>
                         </div>
                     ))}
                 </div>
 
-                {/* Add Button */}
                 {galleryInputs.length < 9 && (
-                    <button 
-                        type="button" 
-                        onClick={handleAddGalleryInput}
-                        className="mt-3 text-sm font-bold text-primary flex items-center gap-1 hover:underline"
-                    >
+                    <button type="button" onClick={handleAddGalleryInput} className="mt-3 text-sm font-bold text-primary flex items-center gap-1 hover:underline">
                         <Plus size={16} /> Dodaj još slika
                     </button>
                 )}
-                <p className="text-xs text-gray-400 mt-2">Unesite direktne linkove ka slikama.</p>
             </div>
 
             <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Opis</label>
-                <textarea name="description" required rows={4} value={formData.description} onChange={handleChange} className="w-full p-3 border rounded-lg" placeholder="Opis usluge ili prostora..." />
+                <textarea name="description" required rows={4} value={formData.description} onChange={handleChange} className="w-full p-3 border rounded-lg" />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
                 <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cena (od €)</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cena od (€)</label>
                 <input name="price_from" type="number" required value={formData.price_from} onChange={handleChange} className="w-full p-3 border rounded-lg" />
                 </div>
                 {formData.type === 'VENUE' && (
@@ -334,55 +431,46 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack }) => {
                 disabled={loading}
                 className="w-full bg-primary text-white font-bold py-4 rounded-lg hover:bg-rose-600 transition-colors flex justify-center items-center gap-2 mt-4"
             >
-                {loading ? 'Čuvanje...' : <><Save size={20} /> Sačuvaj u Bazu</>}
+                {loading ? 'Čuvanje...' : <><Save size={20} /> {isEditMode ? 'Sačuvaj izmene' : 'Dodaj u bazu'}</>}
             </button>
             </form>
         </div>
 
-        {/* RIGHT COLUMN: Bulk Upload */}
-        <div className="lg:col-span-1 space-y-6">
-            <div className="bg-portal-dark text-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FileText /> Masovni unos</h2>
-                <p className="text-sm text-gray-300 mb-6">
-                    Imate mnogo restorana ili usluga? Otpremite CSV fajl da ih dodate sve odjednom.
-                </p>
+        {/* BULK UPLOAD */}
+        {!isEditMode && (
+            <div className="lg:col-span-1 space-y-6">
+                <div className="bg-portal-dark text-white p-6 rounded-2xl shadow-lg">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FileText /> Masovni unos</h2>
+                    <p className="text-sm text-gray-300 mb-6">
+                        Otpremite CSV fajl da dodate više profila odjednom.
+                    </p>
 
-                <button 
-                    onClick={downloadTemplate}
-                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold transition-colors mb-4"
-                >
-                    <Download size={16} /> Preuzmi CSV šablon
-                </button>
-
-                <div className="relative">
-                    <input 
-                        type="file" 
-                        accept=".csv"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        className="hidden" 
-                        id="csv-upload"
-                    />
-                    <label 
-                        htmlFor="csv-upload"
-                        className={`w-full bg-white text-portal-dark font-bold py-4 rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2 cursor-pointer ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+                    <button 
+                        onClick={downloadTemplate}
+                        className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold transition-colors mb-4"
                     >
-                       {loading ? 'Učitavanje...' : <><Upload size={20} /> Otpremi CSV</>} 
-                    </label>
+                        <Download size={16} /> Preuzmi šablon
+                    </button>
+
+                    <div className="relative">
+                        <input 
+                            type="file" 
+                            accept=".csv"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            className="hidden" 
+                            id="csv-upload"
+                        />
+                        <label 
+                            htmlFor="csv-upload"
+                            className={`w-full bg-white text-portal-dark font-bold py-4 rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2 cursor-pointer ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+                        >
+                        {loading ? 'Učitavanje...' : <><Upload size={20} /> Otpremi CSV</>} 
+                        </label>
+                    </div>
                 </div>
             </div>
-
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-                <h3 className="font-bold mb-2 text-sm">Uputstvo za CSV</h3>
-                <ul className="text-xs text-gray-500 space-y-2 list-disc pl-4">
-                    <li>Koristite zarez (,) kao razdelnik.</li>
-                    <li><strong>Više slika:</strong> U koloni za slike, razdvojite linkove tačkom i zarezom (;). <br/>Primer: <code>img1.jpg;img2.jpg</code></li>
-                    <li>Prva slika je glavna (cover).</li>
-                    <li>Slike moraju biti direktni linkovi (URL).</li>
-                    <li>Za kategorije koristite ID (1=Restorani...).</li>
-                </ul>
-            </div>
-        </div>
+        )}
 
       </div>
     </div>

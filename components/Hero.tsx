@@ -2,7 +2,17 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  title?: string;
+  subtitle?: string;
+  imageUrl?: string;
+}
+
+export const Hero: React.FC<HeroProps> = ({ 
+  title = "Organizacija svih vrsta proslava u Srbiji: Od venčanja do korporativnih događaja",
+  subtitle = "Pronađite idealan prostor i usluge za vaše venčanje, 18. rođendan, krštenje ili proslavu firme. Kreirajte uspomene koje traju zauvek.",
+  imageUrl = "https://images.unsplash.com/photo-1688493904228-f6bd305c542d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+}) => {
   return (
     <div className="hero relative pt-36 pb-12 md:pt-44 md:pb-20">
       <div className="hero__container container mx-auto px-6 md:px-12">
@@ -43,16 +53,16 @@ export const Hero: React.FC = () => {
         {/* Hero Image Card */}
         <div className="hero__image-card relative rounded-3xl overflow-hidden h-[500px] md:h-[600px] w-full shadow-sm">
           <img 
-            src="https://images.unsplash.com/photo-1688493904228-f6bd305c542d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-            alt="Srećni ljudi na proslavi - Organizacija venčanja, rođendana i korporativnih događaja u Srbiji" 
+            src={imageUrl} 
+            alt="Proslava" 
             className="w-full h-full object-cover"
           />
           <div className="hero__overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16 text-white">
             <h1 className="hero__title text-4xl md:text-6xl font-bold mb-4 max-w-5xl leading-tight">
-              Organizacija svih vrsta proslava u Srbiji: Od venčanja do korporativnih događaja
+              {title}
             </h1>
             <h2 className="hero__subtitle text-lg font-medium mb-8 max-w-2xl text-gray-100">
-              Pronađite idealan prostor i usluge za vaše venčanje, 18. rođendan, krštenje ili proslavu firme. Kreirajte uspomene koje traju zauvek.
+              {subtitle}
             </h2>
             <button className="hero__cta bg-white text-portal-dark hover:bg-gray-100 font-bold px-8 py-4 rounded-full transition-colors w-fit shadow-md">
               Istraži ponudu prostora

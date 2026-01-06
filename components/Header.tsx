@@ -8,9 +8,10 @@ import { User } from 'firebase/auth';
 interface HeaderProps {
   onNavigate?: (view: ViewType) => void;
   currentView?: ViewType;
+  customPreheader?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home' }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home', customPreheader }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
   const [user, setUser] = useState<User | null | undefined>(auth?.currentUser);
@@ -84,7 +85,9 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     >
       {/* Preheader Countdown */}
       <div className="header__preheader bg-portal-dark text-white text-xs md:text-sm py-2.5 text-center font-medium tracking-wide">
-        <span className="header__preheader-text opacity-90 mr-2">Pozivamo profesionalce da nam se pridruže! Otvaranje za:</span>
+        <span className="header__preheader-text opacity-90 mr-2">
+            {customPreheader || "Pozivamo profesionalce da nam se pridruže! Otvaranje za:"}
+        </span>
         <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
           {timeLeft.days} d
         </span>

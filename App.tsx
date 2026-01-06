@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, Suspense } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Categories } from './components/Categories';
@@ -9,33 +10,58 @@ import { ForPartners } from './components/ForPartners';
 import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
 import { AdminAddVendor } from './components/AdminAddVendor'; 
+import { AdminLogin } from './components/AdminLogin';
 import { PartnerAuth } from './components/PartnerAuth';
 import { PartnerDashboard } from './components/PartnerDashboard';
 import { GoodsCategories } from './components/GoodsCategories';
-import { SEOManager } from './components/SEOManager'; // Import SEO
+import { SEOManager } from './components/SEOManager'; 
 import { Vendor } from './types';
 import { db, auth } from './lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { getSiteContent } from './services/vendorService';
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard';
+// Safe lazy load with error handling
+const AdminPanel = React.lazy(() => 
+  import('./components/AdminPanel')
+    .catch(error => {
+      console.error("Error loading AdminPanel:", error);
+      return { default: () => <div className="p-20 text-center text-red-600 font-bold">Greška pri učitavanju modula. Proverite konzolu.</div> };
+    })
+);
+
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [targetCategory, setTargetCategory] = useState<string | null>(null);
+  const [cmsContent, setCmsContent] = useState<any>(null); 
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
-  // Connection check
+  // Connection check and Content Load
   useEffect(() => {
-    const checkConnection = async () => {
-      if (!db) return;
+    const initApp = async () => {
+      // 1. Check connection
+      if (db) {
+        try {
+            const q = query(collection(db, 'vendors'), limit(1));
+            await getDocs(q);
+        } catch (error) {
+            console.error("Firebase Connection Failed:", error);
+        }
+      }
+
+      // 2. Load CMS Content
       try {
-        const q = query(collection(db, 'vendors'), limit(1));
-        await getDocs(q);
-      } catch (error) {
-        console.error("Firebase Connection Failed:", error);
+        const content = await getSiteContent();
+        if (content) {
+            setCmsContent(content);
+        }
+      } catch (e) {
+        console.error("CMS Load Error", e);
       }
     };
-    checkConnection();
+    initApp();
   }, []);
 
   const handleNavigate = (view: ViewType, subParam?: string) => {
@@ -49,6 +75,8 @@ function App() {
     else if (view === 'goods-categories') path = '/goods';
     else if (view === 'goods-list') path = '/goods/list';
     else if (view === 'partners') path = '/partners';
+    else if (view === 'admin-login') path = '/admin/login';
+    else if (view === 'admin-panel') path = '/admin';
     else if (view === 'venue-details' && selectedVendor) path = `/vendor/${selectedVendor.slug}`;
     
     window.history.pushState({}, '', path);
@@ -76,7 +104,6 @@ function App() {
   const handleVendorSelect = (vendor: Vendor) => {
     setSelectedVendor(vendor);
     setCurrentView('venue-details');
-    // Update URL immediately
     window.history.pushState({}, '', `/vendor/${vendor.slug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -89,6 +116,11 @@ function App() {
     } else {
         handleNavigate('services');
     }
+  };
+
+  const handleAdminLoginSuccess = () => {
+      setIsAdminAuthenticated(true);
+      handleNavigate('admin-panel');
   };
 
   // --- JSON-LD GENERATION ---
@@ -109,7 +141,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <Header onNavigate={handleNavigate} currentView={currentView} />
+      
+      {/* Hide Header on Admin Pages */}
+      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+        <Header 
+            onNavigate={handleNavigate} 
+            currentView={currentView} 
+            customPreheader={cmsContent?.preheaderText} 
+        />
+      )}
+      
       <main>
         {currentView === 'home' && (
           <>
@@ -118,7 +159,11 @@ function App() {
               description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
               jsonLd={organizationSchema}
             />
-            <Hero />
+            <Hero 
+                title={cmsContent?.heroTitle}         
+                subtitle={cmsContent?.heroSubtitle}   
+                imageUrl={cmsContent?.heroImage}      
+            />
             <Categories onCategoryClick={handleCategoryClick} />
             <AiPlanner />
             <LeadForm />
@@ -193,6 +238,27 @@ function App() {
           <AdminAddVendor onBack={() => handleNavigate('home')} />
         )}
 
+        {/* ADMIN GATEWAY */}
+        {currentView === 'admin-login' && (
+            <AdminLogin onLogin={handleAdminLoginSuccess} />
+        )}
+
+        {/* ADMIN PANEL (Lazy Loaded & Protected) */}
+        {currentView === 'admin-panel' && (
+            <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                    <div className="ml-4 font-medium text-gray-500">Učitavanje panela...</div>
+                </div>
+            }>
+                {isAdminAuthenticated ? (
+                    <AdminPanel onLogout={() => handleNavigate('home')} />
+                ) : (
+                    <AdminLogin onLogin={handleAdminLoginSuccess} />
+                )}
+            </Suspense>
+        )}
+
         {currentView === 'partner-auth' && (
              <>
              <SEOManager title="Prijava za Partnere" description="Pristupite svom biznis nalogu." />
@@ -204,7 +270,11 @@ function App() {
             <PartnerDashboard onLogout={() => handleNavigate('home')} />
         )}
       </main>
-      <Footer onAdminClick={() => handleNavigate('admin-add')} />
+
+      {/* Hide Footer on Admin Panel */}
+      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+          <Footer onAdminClick={() => handleNavigate('admin-login')} />
+      )}
     </div>
   );
 }
