@@ -5,12 +5,12 @@ import { Vendor, VendorCategory } from '../types';
 export const categories: VendorCategory[] = [
   { id: '1', slug: 'venues', name: 'Restorani i Sale', iconName: 'Home', count: 120, image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80' },
   { id: '2', slug: 'photographers', name: 'Fotografi', iconName: 'Camera', count: 85, image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80' },
-  { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1617136785693-54b279bddfeb?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
   { id: '4', slug: 'cakes', name: 'Torte', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
   { id: '5', slug: 'decoration', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
   { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=800&q=80' },
   { id: '7', slug: 'catering', name: 'Katering', iconName: 'ChefHat', count: 28, image: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80' },
-  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=80&w=1771&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1487412947132-28c5d74cab8e?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Specific Venue Types for the Filter Dropdown
