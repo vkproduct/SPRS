@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X, Gift } from 'lucide-react';
+import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X, Gift, BarChart3, Search, Zap, Check, AlertCircle } from 'lucide-react';
 import { ViewType } from '../App';
 import { SEOManager } from './SEOManager';
 
@@ -31,22 +31,26 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
       let basePrice = 0;
       let discountPercent = 0;
       let title = "";
+      let avgJobValue = 0; // Average earnings from one job
 
       switch (selectedCategory) {
           case 'venue':
               basePrice = 69; // Restorani, Sale
-              discountPercent = 20; // 20% discount (Updated from 30%)
+              discountPercent = 20; // 20% discount
               title = "Restorani i Sale";
+              avgJobValue = 2500; // Approx earnings per wedding
               break;
           case 'media':
               basePrice = 29; // Fotografi, Muzika
               discountPercent = 20; // 20% discount
               title = "Foto, Video i Muzika";
+              avgJobValue = 600;
               break;
           case 'service':
               basePrice = 13; // Dekoracija, Torte, Ostalo
               discountPercent = 20; // 20% discount
               title = "Dekoracija, Torte i Ostalo";
+              avgJobValue = 300;
               break;
       }
 
@@ -58,6 +62,7 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
       return {
           title,
           discountPercent,
+          avgJobValue,
           plan: {
               monthly: monthly,
               yearlyTotal: Math.round(yearlyTotal),
@@ -67,6 +72,40 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
   }, [selectedCategory]);
 
   const currentPrice = billingPeriod === 'monthly' ? pricingData.plan.monthly : pricingData.plan.yearlyMonthlyEq;
+
+  // Comparison Data
+  const comparisonData = [
+      { 
+          label: "Mesečni trošak", 
+          portal: { text: "13€ - 69€", sub: "Fiksno / mes" }, 
+          ads: { text: "300€ - 1000€+", sub: "Budžet za oglase" },
+          highlight: true 
+      },
+      { 
+          label: "Povrat investicije (ROI)", 
+          portal: { text: "20x - 50x", sub: "Visok povrat" }, 
+          ads: { text: "2x - 5x", sub: "Nizak povrat" },
+          highlight: true 
+      },
+      { 
+          label: "Kvalitet publike", 
+          portal: { text: "100% Kupci", sub: "Traže uslugu" }, 
+          ads: { text: "~2% Konverzija", sub: "Hladan saobraćaj" },
+          highlight: false 
+      },
+      { 
+          label: "Vreme za podešavanje", 
+          portal: { text: "15 min", sub: "Jednokratno" }, 
+          ads: { text: "5+ sati", sub: "Mesečno održavanje" },
+          highlight: false 
+      },
+      { 
+          label: "SEO Rangiranje", 
+          portal: { text: "Uključeno", sub: "Google 1. strana" }, 
+          ads: { text: "Nema uticaja", sub: "Plaćate svaki klik" },
+          highlight: false 
+      },
+  ];
 
   // FAQ Schema Data
   const faqs = [
@@ -191,6 +230,91 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
                         <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded">{step.time}</span>
                     </div>
                 ))}
+            </div>
+        </div>
+      </section>
+
+      {/* SECTION 4: COMPARISON TABLE & ROI */}
+      <section className="partner-comparison py-20 bg-gray-50 border-y border-gray-200">
+        <div className="container mx-auto px-6 md:px-12">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-portal-dark mb-4">Zašto SveZaProslavu, a ne samo oglasi?</h2>
+                <p className="text-portal-gray">Pogledajte razliku između specijalizovanog portala i klasičnog oglašavanja na društvenim mrežama.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
+                
+                {/* COMPARISON TABLE */}
+                <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 flex flex-col h-full">
+                    <div className="grid grid-cols-3 bg-portal-dark text-white p-6 font-bold text-sm md:text-base">
+                        <div className="flex items-center gap-2">Karakteristika</div>
+                        <div className="text-center text-primary flex justify-center items-center gap-2"><CheckCircle size={18} /> SveZaProslavu</div>
+                        <div className="text-center text-gray-400 opacity-80">Google / FB Ads</div>
+                    </div>
+                    
+                    <div className="text-sm md:text-base flex-1 flex flex-col justify-between">
+                        {comparisonData.map((row, idx) => (
+                            <div key={idx} className={`grid grid-cols-3 p-5 border-b border-gray-100 hover:bg-gray-50 transition-colors flex-1 items-center ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                <div className="font-bold text-gray-700 flex items-center">{row.label}</div>
+                                
+                                {/* Portal Column */}
+                                <div className="text-center flex flex-col items-center justify-center border-x border-gray-100 h-full px-2">
+                                    <span className={`font-bold text-lg ${row.highlight ? 'text-primary' : 'text-gray-800'}`}>
+                                        {row.portal.text}
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded-full mt-1">
+                                        {row.portal.sub}
+                                    </span>
+                                </div>
+
+                                {/* Ads Column */}
+                                <div className="text-center flex flex-col items-center justify-center text-gray-500 h-full px-2">
+                                     <span className="font-semibold">{row.ads.text}</span>
+                                     <span className="text-xs text-gray-400 mt-1">{row.ads.sub}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ROI CALCULATOR CARD */}
+                <div className="bg-gradient-to-br from-primary to-[#D80565] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden h-full flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none"></div>
+                    
+                    <div>
+                        <h3 className="text-2xl font-bold mb-8 flex items-center gap-2">
+                            <BarChart3 className="text-white" /> Matematika uspeha
+                        </h3>
+                        
+                        <div className="space-y-6">
+                            <div className="bg-white/10 p-5 rounded-xl backdrop-blur-sm shadow-inner">
+                                <div className="text-xs text-white/80 uppercase font-bold mb-1">Prosečna zarada (1 posao)</div>
+                                <div className="text-4xl font-bold tracking-tight">~{pricingData.avgJobValue}€</div>
+                                <div className="text-xs text-white/70 mt-1">Za kategoriju: {pricingData.title}</div>
+                            </div>
+
+                            <div className="flex items-center justify-center text-2xl font-bold opacity-50 my-2">VS</div>
+
+                            <div className="bg-white/10 p-5 rounded-xl backdrop-blur-sm border border-white/20 shadow-inner">
+                                <div className="text-xs text-white/80 uppercase font-bold mb-1">Godišnja članarina</div>
+                                <div className="text-4xl font-bold text-white">
+                                    {pricingData.plan.yearlyTotal}€
+                                </div>
+                                <div className="text-xs text-green-300 mt-1 font-bold flex items-center gap-1">
+                                    <Check size={12} /> Vaš jedini trošak za 12 meseci
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t border-white/20">
+                        <p className="font-medium text-lg leading-tight">
+                            <span className="text-yellow-300 font-bold text-xl">Zaključak:</span> <br/>
+                            Samo <span className="underline decoration-yellow-300 decoration-2 font-bold">JEDNA</span> rezervacija pokriva trošak portala za narednih 4-5 godina!
+                        </p>
+                    </div>
+                </div>
+
             </div>
         </div>
       </section>

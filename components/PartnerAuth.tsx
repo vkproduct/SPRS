@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Mail, Lock, Briefcase, FileText, Phone, CheckCircle, ChevronRight } from 'lucide-react';
 import { loginPartner, registerPartner } from '../services/authService';
@@ -206,6 +207,8 @@ export const PartnerAuth: React.FC<PartnerAuthProps> = ({ onLoginSuccess }) => {
                                             <option value="3">Muzika</option>
                                             <option value="4">Torte</option>
                                             <option value="5">Dekoracija</option>
+                                            <option value="9">Transport</option>
+                                            <option value="10">Vatromet</option>
                                         </select>
                                     </div>
                                 </div>

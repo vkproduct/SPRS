@@ -59,9 +59,10 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
             category_id: initialData.category_id,
             venue_type: (initialData as any).venue_type || defaultVenueType,
             description: initialData.description || '',
-            price_from: initialData.type === 'VENUE' ? initialData.pricing?.per_person_from : (initialData.pricing as any)?.package_from,
-            capacity_min: initialData.type === 'VENUE' ? initialData.capacity?.min : '',
-            capacity_max: initialData.type === 'VENUE' ? initialData.capacity?.max : '',
+            // Ensure we fallback to empty string if undefined to avoid "uncontrolled input" error
+            price_from: (initialData.type === 'VENUE' ? initialData.pricing?.per_person_from : (initialData.pricing as any)?.package_from) || '',
+            capacity_min: (initialData.type === 'VENUE' ? initialData.capacity?.min : '') || '',
+            capacity_max: (initialData.type === 'VENUE' ? initialData.capacity?.max : '') || '',
             cover_image: initialData.cover_image || '',
             phone: initialData.contact?.phone || '',
             email: initialData.contact?.email || '',
@@ -74,7 +75,7 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
     }
   }, [initialData, defaultVenueType]);
 
-  // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (Определены до использования в handleSubmit)
+  // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
   const safeStr = (val: any): string => {
     if (val === null || val === undefined) return '';
     return String(val).trim();
@@ -171,7 +172,6 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
 
     try {
         const fullGallery = [formData.cover_image, ...galleryInputs].filter(url => url && url.trim().length > 0);
-        // Теперь функция constructVendorObject гарантированно существует
         const vendorPayload = constructVendorObject({ ...formData, gallery: fullGallery });
         
         let success;
@@ -324,6 +324,8 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
                     <option value="6">6 - Videografi</option>
                     <option value="7">7 - Katering</option>
                     <option value="8">8 - Šminka i Frizura</option>
+                    <option value="9">9 - Transport (Limuzine)</option>
+                    <option value="10">10 - Vatromet i Efekti</option>
                 </select>
                 </div>
             </div>

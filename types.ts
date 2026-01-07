@@ -1,9 +1,10 @@
 
+
 // Common interfaces
 export interface VendorCategory {
   id: string;
   name: string;
-  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other' | 'products' | 'videography' | 'catering' | 'beauty'; // Database keys
+  slug: 'venues' | 'photographers' | 'music' | 'decoration' | 'cakes' | 'other' | 'products' | 'videography' | 'catering' | 'beauty' | 'transport' | 'fireworks'; // Database keys
   iconName: string;
   count: number;
   image: string;

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Users, Euro, Filter, ChevronDown, SlidersHorizontal, ArrowUpRight, MessageCircle, Camera, Music, ShoppingBag, Check } from 'lucide-react';
+import { Search, MapPin, Users, Euro, Filter, ChevronDown, SlidersHorizontal, ArrowUpRight, MessageCircle, Camera, Music, ShoppingBag, Car, Sparkles } from 'lucide-react';
 import { categories, venueSubcategories, productSubcategories } from '../data/database'; 
 import { getVendors } from '../services/vendorService';
 import { Vendor, VendorType } from '../types';
@@ -148,6 +148,16 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
     setMinCapacity(''); 
     setMaxPrice('');
     setSaleOption('all');
+  };
+
+  const getServiceIcon = (categoryId: string) => {
+    switch(categoryId) {
+        case '2': return <Camera size={14} className="text-primary"/>;
+        case '3': return <Music size={14} className="text-primary"/>;
+        case '9': return <Car size={14} className="text-primary"/>;
+        case '10': return <Sparkles size={14} className="text-primary"/>;
+        default: return <Music size={14} className="text-primary"/>; // Fallback
+    }
   };
 
   return (
@@ -363,7 +373,7 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                                 </>
                             ) : (
                                 <>
-                                    {vendor.category_id === '2' ? <Camera size={14} className="text-primary"/> : <Music size={14} className="text-primary"/>}
+                                    {getServiceIcon(vendor.category_id)}
                                     <span>{vendor.features[0] || 'Profi oprema'}</span>
                                 </>
                             )}

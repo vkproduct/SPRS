@@ -1,4 +1,5 @@
 
+
 import { Vendor, VendorCategory } from '../types';
 
 // 1. Categories Table (Main Categories)
@@ -11,6 +12,8 @@ export const categories: VendorCategory[] = [
   { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=800&q=80' },
   { id: '7', slug: 'catering', name: 'Katering', iconName: 'ChefHat', count: 28, image: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80' },
   { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1487412947132-28c5d74cab8e?auto=format&fit=crop&w=800&q=80' },
+  { id: '9', slug: 'transport', name: 'Transport', iconName: 'Car', count: 18, image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80' },
+  { id: '10', slug: 'fireworks', name: 'Vatromet', iconName: 'Flame', count: 12, image: 'https://images.unsplash.com/photo-1533230125150-5d13346174a6?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Specific Venue Types for the Filter Dropdown
