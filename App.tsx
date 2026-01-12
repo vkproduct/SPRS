@@ -265,12 +265,12 @@ function App() {
 
           {/* Legacy Partner Auth Route - redirects to new flow implicitly via UI buttons or logic */}
           {currentView === 'partner-auth' && (
-               <AuthPage initialView="login" onNavigate={handleNavigate} />
+               <AuthPage initialView="login" onNavigate={(v) => handleNavigate(v as ViewType)} />
           )}
 
           {/* NEW AUTH ROUTES */}
           {(currentView === 'login' || currentView === 'register') && (
-               <AuthPage initialView={currentView} onNavigate={handleNavigate} />
+               <AuthPage initialView={currentView} onNavigate={(v) => handleNavigate(v as ViewType)} />
           )}
 
           {currentView === 'partner-dashboard' && (
