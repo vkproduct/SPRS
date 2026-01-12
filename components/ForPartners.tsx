@@ -130,7 +130,7 @@ export const ForPartners: React.FC<ForPartnersProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="partner-page bg-white pt-36">
+    <div className="partner-page bg-white pt-28">
       <SEOManager 
          title="Partner Program | SveZaProslavu.rs"
          description="Pridružite se mreži najboljih ugostitelja i agencija. Povećajte broj rezervacija bez provizije."
