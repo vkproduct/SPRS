@@ -9,11 +9,11 @@ export const categories: VendorCategory[] = [
   { id: '3', slug: 'music', name: 'Muzika', iconName: 'Music', count: 64, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80' },
   { id: '4', slug: 'cakes', name: 'Torte', iconName: 'Utensils', count: 45, image: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80' },
   { id: '5', slug: 'decoration', name: 'Dekoracija', iconName: 'Flower', count: 32, image: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=800&q=80' },
-  { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=800&q=80' },
+  { id: '6', slug: 'videography', name: 'Videografi', iconName: 'Video', count: 42, image: 'https://images.unsplash.com/photo-1535025183041-0991a977e25b?auto=format&fit=crop&w=800&q=80' },
   { id: '7', slug: 'catering', name: 'Katering', iconName: 'ChefHat', count: 28, image: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80' },
-  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1487412947132-28c5d74cab8e?auto=format&fit=crop&w=800&q=80' },
+  { id: '8', slug: 'beauty', name: 'Šminka i Frizura', iconName: 'Sparkles', count: 56, image: 'https://images.unsplash.com/photo-1487412947132-232a3b2b2a29?auto=format&fit=crop&w=800&q=80' },
   { id: '9', slug: 'transport', name: 'Transport', iconName: 'Car', count: 18, image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80' },
-  { id: '10', slug: 'fireworks', name: 'Vatromet', iconName: 'Flame', count: 12, image: 'https://images.unsplash.com/photo-1533230125150-5d13346174a6?auto=format&fit=crop&w=800&q=80' },
+  { id: '10', slug: 'fireworks', name: 'Vatromet', iconName: 'Flame', count: 12, image: 'https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?auto=format&fit=crop&w=800&q=80' },
 ];
 
 // Specific Venue Types for the Filter Dropdown
