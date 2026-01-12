@@ -1,6 +1,7 @@
 
+
 import React, { useEffect, useState } from 'react';
-import { getMyVendorProfile, logoutPartner } from '../services/authService';
+import { getMyVendorProfile, logout } from '../services/authService';
 import { Vendor } from '../types';
 import { auth, db } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -40,7 +41,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
     }, []);
 
     const handleLogout = async () => {
-        await logoutPartner();
+        await logout();
         onLogout();
     };
 

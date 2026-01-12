@@ -100,3 +100,32 @@ export interface Inquiry {
   status: 'new' | 'read' | 'replied';
   createdAt: any; // Firestore Timestamp
 }
+
+// --- NEW AUTH INTERFACES ---
+
+export type UserRole = 'user' | 'contractor' | 'admin';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  role: UserRole;
+  createdAt: any;
+  // Specific for event organizers
+  eventDate?: string;
+  eventType?: 'wedding' | 'baptism' | 'birthday' | 'other';
+  guestCount?: number;
+  preferences?: {
+    location?: string;
+    budget?: string;
+    style?: string;
+  };
+}
+
+export interface AuthState {
+  user: UserProfile | null;
+  vendorProfile: Vendor | null; // If role is contractor
+  loading: boolean;
+}

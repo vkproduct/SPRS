@@ -11,14 +11,15 @@ import { VenueList } from './components/VenueList';
 import { VenueDetails } from './components/VenueDetails';
 import { AdminAddVendor } from './components/AdminAddVendor'; 
 import { AdminLogin } from './components/AdminLogin';
-import { PartnerAuth } from './components/PartnerAuth';
 import { PartnerDashboard } from './components/PartnerDashboard';
 import { GoodsCategories } from './components/GoodsCategories';
 import { SEOManager } from './components/SEOManager'; 
 import { Vendor } from './types';
-import { db, auth } from './lib/firebase';
+import { db } from './lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 import { getSiteContent } from './services/vendorService';
+import { AuthProvider } from './context/AuthContext'; // NEW
+import { AuthPage } from './components/auth/AuthPage'; // NEW
 
 // Safe lazy load with error handling
 const AdminPanel = React.lazy(() => 
@@ -29,7 +30,7 @@ const AdminPanel = React.lazy(() =>
     })
 );
 
-export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel';
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel' | 'login' | 'register';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -77,6 +78,8 @@ function App() {
     else if (view === 'partners') path = '/partners';
     else if (view === 'admin-login') path = '/admin/login';
     else if (view === 'admin-panel') path = '/admin';
+    else if (view === 'login') path = '/login';
+    else if (view === 'register') path = '/register';
     else if (view === 'venue-details' && selectedVendor) path = `/vendor/${selectedVendor.slug}`;
     
     window.history.pushState({}, '', path);
@@ -140,142 +143,147 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      
-      {/* Hide Header on Admin Pages */}
-      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
-        <Header 
-            onNavigate={handleNavigate} 
-            currentView={currentView} 
-            customPreheader={cmsContent?.preheaderText} 
-        />
-      )}
-      
-      <main>
-        {currentView === 'home' && (
-          <>
-            <SEOManager 
-              title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
-              description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
-              jsonLd={organizationSchema}
-            />
-            <Hero 
-                title={cmsContent?.heroTitle}         
-                subtitle={cmsContent?.heroSubtitle}   
-                imageUrl={cmsContent?.heroImage}      
-            />
-            <Categories onCategoryClick={handleCategoryClick} />
-            <AiPlanner />
-            <LeadForm />
-          </>
-        )}
+    <AuthProvider>
+      <div className="min-h-screen bg-slate-50 font-sans">
         
-        {currentView === 'partners' && (
-          <>
-            <SEOManager 
-              title="Postanite Partner | SveZaProslavu.rs"
-              description="Registrujte svoj restoran, bend ili agenciju. Popunite termine tokom cele godine."
-              canonical="https://svezaproslavu.rs/partners"
-            />
-            <ForPartners onNavigate={handleNavigate} />
-          </>
-        )}
-
-        {currentView === 'venues' && (
-          <>
-             <SEOManager 
-              title="Sale za Svadbe i Proslave Beograd, Novi Sad | SveZaProslavu.rs"
-              description="Istražite najbolje restorane, sale za venčanja i prostore za događaje u Srbiji. Pogledajte cene, slike i kapacitete."
-              canonical="https://svezaproslavu.rs/venues"
-            />
-            <VenueList 
-              onVenueSelect={handleVendorSelect} 
-              initialCategoryId={targetCategory} 
-              filterType="VENUE"
-            />
-          </>
-        )}
-
-        {currentView === 'services' && (
-          <>
-            <SEOManager 
-              title="Muzika, Fotografi i Dekoracija za Proslave | SveZaProslavu.rs"
-              description="Pronađite bendove za svadbe, profesionalne fotografe i dekoratere za vaš događaj."
-              canonical="https://svezaproslavu.rs/services"
-            />
-            <VenueList 
-              onVenueSelect={handleVendorSelect} 
-              initialCategoryId={targetCategory} 
-              filterType="SERVICE"
-            />
-          </>
-        )}
-
-        {currentView === 'goods-categories' && (
-           <>
-            <SEOManager 
-              title="Venčanice, Odela i Pozivnice | SveZaProslavu.rs Shop"
-              description="Katalog venčanica, muških odela, burmi i poklona za goste. Kupovina i iznajmljivanje."
-              canonical="https://svezaproslavu.rs/goods"
-            />
-            <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
-           </>
-        )}
-
-        {currentView === 'goods-list' && (
-          <VenueList 
-            onVenueSelect={handleVendorSelect} 
-            initialCategoryId={targetCategory} 
-            filterType="PRODUCT"
+        {/* Hide Header on Admin Pages */}
+        {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+          <Header 
+              onNavigate={handleNavigate} 
+              currentView={currentView} 
+              customPreheader={cmsContent?.preheaderText} 
           />
         )}
+        
+        <main>
+          {currentView === 'home' && (
+            <>
+              <SEOManager 
+                title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
+                description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
+                jsonLd={organizationSchema}
+              />
+              <Hero 
+                  title={cmsContent?.heroTitle}         
+                  subtitle={cmsContent?.heroSubtitle}   
+                  imageUrl={cmsContent?.heroImage}      
+              />
+              <Categories onCategoryClick={handleCategoryClick} />
+              <AiPlanner />
+              <LeadForm />
+            </>
+          )}
+          
+          {currentView === 'partners' && (
+            <>
+              <SEOManager 
+                title="Postanite Partner | SveZaProslavu.rs"
+                description="Registrujte svoj restoran, bend ili agenciju. Popunite termine tokom cele godine."
+                canonical="https://svezaproslavu.rs/partners"
+              />
+              <ForPartners onNavigate={handleNavigate} />
+            </>
+          )}
 
-        {currentView === 'venue-details' && selectedVendor && (
-          <VenueDetails venue={selectedVendor} onBack={handleBack} />
-        )}
+          {currentView === 'venues' && (
+            <>
+               <SEOManager 
+                title="Sale za Svadbe i Proslave Beograd, Novi Sad | SveZaProslavu.rs"
+                description="Istražite najbolje restorane, sale za venčanja i prostore za događaje u Srbiji. Pogledajte cene, slike i kapacitete."
+                canonical="https://svezaproslavu.rs/venues"
+              />
+              <VenueList 
+                onVenueSelect={handleVendorSelect} 
+                initialCategoryId={targetCategory} 
+                filterType="VENUE"
+              />
+            </>
+          )}
 
-        {currentView === 'admin-add' && (
-          <AdminAddVendor onBack={() => handleNavigate('home')} />
-        )}
+          {currentView === 'services' && (
+            <>
+              <SEOManager 
+                title="Muzika, Fotografi i Dekoracija za Proslave | SveZaProslavu.rs"
+                description="Pronađite bendove za svadbe, profesionalne fotografe i dekoratere za vaš događaj."
+                canonical="https://svezaproslavu.rs/services"
+              />
+              <VenueList 
+                onVenueSelect={handleVendorSelect} 
+                initialCategoryId={targetCategory} 
+                filterType="SERVICE"
+              />
+            </>
+          )}
 
-        {/* ADMIN GATEWAY */}
-        {currentView === 'admin-login' && (
-            <AdminLogin onLogin={handleAdminLoginSuccess} />
-        )}
-
-        {/* ADMIN PANEL (Lazy Loaded & Protected) */}
-        {currentView === 'admin-panel' && (
-            <Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-                    <div className="ml-4 font-medium text-gray-500">Učitavanje panela...</div>
-                </div>
-            }>
-                {isAdminAuthenticated ? (
-                    <AdminPanel onLogout={() => handleNavigate('home')} />
-                ) : (
-                    <AdminLogin onLogin={handleAdminLoginSuccess} />
-                )}
-            </Suspense>
-        )}
-
-        {currentView === 'partner-auth' && (
+          {currentView === 'goods-categories' && (
              <>
-             <SEOManager title="Prijava za Partnere" description="Pristupite svom biznis nalogu." />
-             <PartnerAuth onLoginSuccess={() => handleNavigate('partner-dashboard')} />
+              <SEOManager 
+                title="Venčanice, Odela i Pozivnice | SveZaProslavu.rs Shop"
+                description="Katalog venčanica, muških odela, burmi i poklona za goste. Kupovina i iznajmljivanje."
+                canonical="https://svezaproslavu.rs/goods"
+              />
+              <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
              </>
-        )}
+          )}
 
-        {currentView === 'partner-dashboard' && (
-            <PartnerDashboard onLogout={() => handleNavigate('home')} />
-        )}
-      </main>
+          {currentView === 'goods-list' && (
+            <VenueList 
+              onVenueSelect={handleVendorSelect} 
+              initialCategoryId={targetCategory} 
+              filterType="PRODUCT"
+            />
+          )}
 
-      {/* Hide Footer on Admin Panel */}
-      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
-          <Footer onAdminClick={() => handleNavigate('admin-login')} />
-      )}
-    </div>
+          {currentView === 'venue-details' && selectedVendor && (
+            <VenueDetails venue={selectedVendor} onBack={handleBack} />
+          )}
+
+          {currentView === 'admin-add' && (
+            <AdminAddVendor onBack={() => handleNavigate('home')} />
+          )}
+
+          {/* ADMIN GATEWAY */}
+          {currentView === 'admin-login' && (
+              <AdminLogin onLogin={handleAdminLoginSuccess} />
+          )}
+
+          {/* ADMIN PANEL (Lazy Loaded & Protected) */}
+          {currentView === 'admin-panel' && (
+              <Suspense fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                      <div className="ml-4 font-medium text-gray-500">Učitavanje panela...</div>
+                  </div>
+              }>
+                  {isAdminAuthenticated ? (
+                      <AdminPanel onLogout={() => handleNavigate('home')} />
+                  ) : (
+                      <AdminLogin onLogin={handleAdminLoginSuccess} />
+                  )}
+              </Suspense>
+          )}
+
+          {/* Legacy Partner Auth Route - redirects to new flow implicitly via UI buttons or logic */}
+          {currentView === 'partner-auth' && (
+               <AuthPage initialView="login" onNavigate={handleNavigate} />
+          )}
+
+          {/* NEW AUTH ROUTES */}
+          {(currentView === 'login' || currentView === 'register') && (
+               <AuthPage initialView={currentView} onNavigate={handleNavigate} />
+          )}
+
+          {currentView === 'partner-dashboard' && (
+              <PartnerDashboard onLogout={() => handleNavigate('home')} />
+          )}
+        </main>
+
+        {/* Hide Footer on Admin Panel */}
+        {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+            <Footer onAdminClick={() => handleNavigate('admin-login')} />
+        )}
+      </div>
+    </AuthProvider>
   );
 }
 

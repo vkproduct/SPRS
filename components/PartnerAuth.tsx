@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Lock, Briefcase, FileText, Phone, CheckCircle, ChevronRight } from 'lucide-react';
-import { loginPartner, registerPartner } from '../services/authService';
+import { loginUnified, registerContractor } from '../services/authService';
 
 interface PartnerAuthProps {
     onLoginSuccess: () => void;
@@ -32,11 +32,18 @@ export const PartnerAuth: React.FC<PartnerAuthProps> = ({ onLoginSuccess }) => {
 
         try {
             if (isRegistering) {
-                await registerPartner(email, password, {
-                    companyName, pib, mb, phone, type, categoryId
+                await registerContractor({ email, password }, {
+                    companyName, 
+                    pib, 
+                    mb, 
+                    phone, 
+                    type, 
+                    category_id: categoryId,
+                    contactFirstName: companyName, // Fallback for name fields
+                    contactLastName: ''
                 });
             } else {
-                await loginPartner(email, password);
+                await loginUnified(email, password);
             }
             onLoginSuccess();
         } catch (err: any) {

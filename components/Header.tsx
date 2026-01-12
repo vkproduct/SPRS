@@ -144,7 +144,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
             </button>
             
             {/* User Menu Pill */}
-            <div className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1">
+            <div 
+                onClick={() => onNavigate && onNavigate(user ? 'partner-dashboard' : 'login')}
+                className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1"
+            >
               <Menu size={18} className="text-gray-600" />
               <div className="header__user-avatar bg-gray-500 text-white p-1 rounded-full">
                  <UserIcon size={18} fill="currentColor" className="text-white" />

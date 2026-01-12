@@ -3,152 +3,206 @@ import { auth, db } from '../lib/firebase';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  signOut 
+  signOut,
+  updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { Vendor } from '../types';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { Vendor, UserProfile, UserRole } from '../types';
 
 // Helper for Mock Mode
 const isMockMode = !auth || !db;
 
-// Mock User Data for local testing
-const MOCK_USER = {
-    uid: 'mock-user-123',
-    email: 'test@partner.com',
-    displayName: 'Mock Partner'
+// --- UTILS ---
+export const validateEmail = (email: string) => {
+  return String(email)
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
 };
 
-// Register a new partner
-export const registerPartner = async (email: string, pass: string, businessData: any) => {
-  if (isMockMode) {
-      console.warn("⚠️ Firebase nije konfigurisan. Simulacija registracije (Mock Mode).");
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Save to local storage to simulate persistence
-      const mockVendorData = {
-          ...businessData,
-          email,
-          id: 'mock-vendor-id',
-          name: businessData.companyName
-      };
-      localStorage.setItem('svezaproslavu_mock_vendor', JSON.stringify(mockVendorData));
-      
-      return { user: { ...MOCK_USER, email } };
-  }
-  
-  // Real Firebase Logic
-  if (!auth || !db) throw new Error("Firebase error"); // Should not happen due to check above
+export const validatePhoneRS = (phone: string) => {
+  // Simple check for Serbian mobile/landline formats
+  // Accepts: 06X..., +3816X...
+  const cleaned = phone.replace(/[\s-]/g, '');
+  return /^(\+381|0)6[0-9]{7,8}$/.test(cleaned) || /^(\+381|0)[1-3][0-9]{6,7}$/.test(cleaned);
+};
+
+// --- API ACTIONS ---
+
+/**
+ * Register a regular User (Organizer)
+ */
+export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'createdAt'> & { password: string }) => {
+  if (isMockMode) throw new Error("Firebase nije konfigurisan.");
 
   // 1. Create Auth User
-  const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+  const userCredential = await createUserWithEmailAndPassword(auth!, data.email, data.password);
   const user = userCredential.user;
 
-  // 2. Create Vendor Profile Stub linked to ownerId
+  // 2. Create User Profile in Firestore
+  const userProfile: UserProfile = {
+    uid: user.uid,
+    email: data.email,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    phone: data.phone,
+    role: 'user',
+    createdAt: Timestamp.now(),
+    eventDate: data.eventDate,
+    eventType: data.eventType,
+    guestCount: data.guestCount,
+    preferences: data.preferences
+  };
+
+  await setDoc(doc(db!, 'users', user.uid), userProfile);
+  
+  // Update Display Name
+  await updateProfile(user, { displayName: `${data.firstName} ${data.lastName}` });
+
+  return userProfile;
+};
+
+/**
+ * Register a Contractor (Vendor)
+ */
+export const registerContractor = async (
+  loginData: { email: string; password: string },
+  vendorData: any
+) => {
+  if (isMockMode) throw new Error("Firebase nije konfigurisan.");
+
+  // 1. Create Auth User
+  const userCredential = await createUserWithEmailAndPassword(auth!, loginData.email, loginData.password);
+  const user = userCredential.user;
+
+  // 2. Create Vendor Profile linked to ownerId
+  // Note: We don't necessarily need a 'users' doc for contractors if we query 'vendors' by ownerId,
+  // but creating a minimal user doc helps with role resolution.
+  const userProfile: UserProfile = {
+    uid: user.uid,
+    email: loginData.email,
+    firstName: vendorData.contactFirstName,
+    lastName: vendorData.contactLastName,
+    phone: vendorData.phone,
+    role: 'contractor',
+    createdAt: Timestamp.now()
+  };
+  await setDoc(doc(db!, 'users', user.uid), userProfile);
+
+  // 3. Create Vendor Document
   const newVendorId = `partner-${user.uid.slice(0, 8)}`;
   
   const vendorStub: any = {
     id: newVendorId,
     ownerId: user.uid,
-    name: businessData.companyName,
-    pib: businessData.pib,
-    mb: businessData.mb,
-    type: businessData.type, // 'VENUE' or 'SERVICE'
-    category_id: businessData.categoryId,
-    slug: businessData.companyName.toLowerCase().replace(/ /g, '-'),
-    
-    // Defaults
-    city: 'Beograd',
-    address: '',
-    description: '',
-    cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80', 
+    name: vendorData.venueName || vendorData.companyName,
+    pib: vendorData.taxId,
+    type: vendorData.type || 'VENUE', 
+    category_id: vendorData.category_id || '1',
+    slug: (vendorData.venueName || vendorData.companyName).toLowerCase().replace(/[^a-z0-9]/g, '-'),
+    city: vendorData.city,
+    address: vendorData.address,
+    description: vendorData.description,
+    cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80', // Default
     gallery: [],
-    rating: 5.0,
+    rating: 0,
     reviews_count: 0,
-    features: [],
     price_range_symbol: '€€',
+    features: [],
     contact: {
-      email: email,
-      phone: businessData.phone
+      email: loginData.email,
+      phone: vendorData.phone
     },
-    // Type specific defaults
     pricing: {},
-    ...(businessData.type === 'VENUE' ? {
-        venue_type: 'Restoran',
-        capacity: { min: 0, max: 100, seated: 100, cocktail: 100 }
+    ...(vendorData.type === 'VENUE' ? {
+        venue_type: vendorData.venueType || 'Restoran',
+        capacity: { min: 0, max: vendorData.capacity || 100, seated: vendorData.capacity, cocktail: vendorData.capacity }
     } : {
         service_type: 'Usluga'
     })
   };
 
-  await setDoc(doc(db, 'vendors', newVendorId), vendorStub);
-  return user;
+  await setDoc(doc(db!, 'vendors', newVendorId), vendorStub);
+  await updateProfile(user, { displayName: vendorData.venueName });
+
+  return { user: userProfile, vendor: vendorStub };
 };
 
-// Login
-export const loginPartner = async (email: string, pass: string) => {
+/**
+ * Unified Login with Role Discovery
+ */
+export const loginUnified = async (email: string, pass: string) => {
   if (isMockMode) {
-      console.warn("⚠️ Simulacija prijave (Mock Mode).");
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { user: { ...MOCK_USER, email } };
+      // Simulation
+      await new Promise(r => setTimeout(r, 800));
+      return { 
+          uid: 'mock-123', 
+          email, 
+          firstName: 'Mock', 
+          lastName: 'User', 
+          role: email.includes('partner') ? 'contractor' : 'user' 
+      } as UserProfile;
   }
 
-  if (!auth) throw new Error("Firebase not initialized");
-  return await signInWithEmailAndPassword(auth, email, pass);
+  // 1. Firebase Auth Login
+  const userCredential = await signInWithEmailAndPassword(auth!, email, pass);
+  const uid = userCredential.user.uid;
+
+  // 2. Determine Role
+  // First check 'users' collection
+  const userDocRef = doc(db!, 'users', uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (userDoc.exists()) {
+      return userDoc.data() as UserProfile;
+  }
+
+  // Fallback: Check if they are a legacy vendor without a user doc
+  const q = query(collection(db!, 'vendors'), where("ownerId", "==", uid));
+  const vendorSnap = await getDocs(q);
+
+  if (!vendorSnap.empty) {
+      // Reconstruct minimal profile for legacy vendor
+      return {
+          uid,
+          email,
+          firstName: 'Partner',
+          lastName: '',
+          phone: '',
+          role: 'contractor',
+          createdAt: Timestamp.now()
+      } as UserProfile;
+  }
+
+  // Fallback 2: Admin?
+  if (email === 'admin@svezaproslavu.rs') { // Or check custom claims
+       return {
+          uid,
+          email,
+          firstName: 'Admin',
+          lastName: '',
+          phone: '',
+          role: 'admin',
+          createdAt: Timestamp.now()
+      } as UserProfile;
+  }
+
+  throw new Error("Profil nije pronađen.");
 };
 
-// Logout
-export const logoutPartner = async () => {
-    if (isMockMode) {
-        console.log("Mock logout");
-        return;
-    }
-    if (!auth) return;
-    return await signOut(auth);
+export const logout = async () => {
+    if (isMockMode) return;
+    return await signOut(auth!);
 };
 
-// Get Vendor Profile by Auth UID
+/**
+ * Get Contractor Profile details
+ */
 export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> => {
-    if (isMockMode) {
-        // Return data from localStorage if available, or a default template
-        const saved = localStorage.getItem('svezaproslavu_mock_vendor');
-        const parsed = saved ? JSON.parse(saved) : {};
-
-        return {
-            id: 'mock-vendor-id',
-            ownerId: 'mock-user-123',
-            name: parsed.companyName || 'Vaša Kompanija (Demo)',
-            type: parsed.type || 'VENUE',
-            category_id: parsed.categoryId || '1',
-            slug: 'demo-company',
-            city: 'Beograd',
-            address: 'Bulevar Demo 123',
-            description: 'Ovo je demo profil jer Firebase nije povezan. Sve izmene ovde su privremene.',
-            cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80',
-            gallery: [],
-            rating: 5.0,
-            reviews_count: 0,
-            price_range_symbol: '€€',
-            features: ['Demo Feature', 'WiFi'],
-            contact: { 
-                phone: parsed.phone || '+381 60 123 456', 
-                email: parsed.email || 'demo@email.com' 
-            },
-            pricing: { per_person_from: 50 },
-            venue_type: 'Restoran',
-            capacity: { min: 50, max: 200, seated: 150, cocktail: 200 },
-            pib: parsed.pib || '123456789',
-            mb: parsed.mb || '12345678'
-        } as Vendor;
-    }
-
-    if (!db) return null;
-    
-    const q = query(collection(db, 'vendors'), where("ownerId", "==", uid));
+    if (isMockMode) return null;
+    const q = query(collection(db!, 'vendors'), where("ownerId", "==", uid));
     const snapshot = await getDocs(q);
-    
     if (snapshot.empty) return null;
-    
-    // Return the first match (a user should typically have one profile)
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Vendor;
 };
