@@ -6,23 +6,15 @@ const env = (import.meta as any).env;
 const supabaseUrl = env?.VITE_SUPABASE_URL;
 const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY;
 
-// Define a loose schema to prevent "Type is not assignable to never" errors in strict mode.
-// This allows specific interfaces (UserProfile, Vendor) to be passed to insert/update methods.
-export type Database = {
-  public: {
-    Tables: {
-      users: { Row: any; Insert: any; Update: any };
-      vendors: { Row: any; Insert: any; Update: any };
-      inquiries: { Row: any; Insert: any; Update: any };
-      settings: { Row: any; Insert: any; Update: any };
-    };
-  };
-};
+// Use 'any' schema to allow any table/row operations without strict validation errors.
+// This resolves TS2769 errors where tables are inferred as 'never' type.
+export type Database = any;
 
-let supabase: SupabaseClient<Database> | null = null;
+let supabase: SupabaseClient<any, "public", any> | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+    // We do not pass a generic to createClient, letting it default to 'any' schema
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
 } else {
     console.warn("Supabase credentials missing. Using local mock data.");
 }
