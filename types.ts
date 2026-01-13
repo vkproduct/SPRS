@@ -1,5 +1,4 @@
 
-
 // Common interfaces
 export interface VendorCategory {
   id: string;
@@ -22,7 +21,7 @@ export type VendorType = 'VENUE' | 'SERVICE' | 'PRODUCT';
 
 export interface BaseVendor {
   id: string;
-  ownerId?: string; // Firebase Auth UID
+  ownerId?: string; // Auth UID
   pib?: string;     // Tax ID
   mb?: string;      // Registration Number
   name: string;
@@ -98,7 +97,7 @@ export interface Inquiry {
   date: string; // Event date
   guestCount: number;
   status: 'new' | 'read' | 'replied';
-  createdAt: any; // Firestore Timestamp
+  createdAt: string; // ISO String
 }
 
 // --- NEW AUTH INTERFACES ---
@@ -112,7 +111,7 @@ export interface UserProfile {
   lastName: string;
   phone: string;
   role: UserRole;
-  createdAt: any;
+  createdAt: string; // ISO String
   // Specific for event organizers
   eventDate?: string;
   eventType?: 'wedding' | 'baptism' | 'birthday' | 'other';

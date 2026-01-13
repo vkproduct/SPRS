@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, User as UserIcon, Briefcase } from 'lucide-react';
 import { ViewType } from '../App';
-import { auth } from '../lib/firebase';
-import { User } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   onNavigate?: (view: ViewType) => void;
@@ -14,13 +13,9 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home', customPreheader }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
-  const [user, setUser] = useState<User | null | undefined>(auth?.currentUser);
+  const { currentUser } = useAuth(); // Use Auth Context instead of direct firebase
 
   useEffect(() => {
-    const unsubscribe = auth?.onAuthStateChanged((u: User | null) => {
-        setUser(u);
-    });
-
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -50,7 +45,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearInterval(interval);
-      if(unsubscribe) unsubscribe();
     };
   }, []);
 
@@ -71,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
   };
 
   const handlePartnerLogin = () => {
-      if (user && onNavigate) {
+      if (currentUser && onNavigate) {
           onNavigate('partner-dashboard');
       } else if (onNavigate) {
           // If not logged in, go to the landing page first so they see benefits
@@ -140,12 +134,12 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
                 onClick={handlePartnerLogin}
                 className="hidden md:flex items-center gap-2 font-medium text-sm hover:bg-gray-100 px-4 py-2 rounded-full cursor-pointer transition-all border border-gray-200"
             >
-                <Briefcase size={16} /> {user ? 'Moj Biznis' : 'Partneri'}
+                <Briefcase size={16} /> {currentUser ? 'Moj Biznis' : 'Partneri'}
             </button>
             
             {/* User Menu Pill */}
             <div 
-                onClick={() => onNavigate && onNavigate(user ? 'partner-dashboard' : 'login')}
+                onClick={() => onNavigate && onNavigate(currentUser ? 'partner-dashboard' : 'login')}
                 className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1"
             >
               <Menu size={18} className="text-gray-600" />

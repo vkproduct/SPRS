@@ -15,11 +15,10 @@ import { PartnerDashboard } from './components/PartnerDashboard';
 import { GoodsCategories } from './components/GoodsCategories';
 import { SEOManager } from './components/SEOManager'; 
 import { Vendor } from './types';
-import { db } from './lib/firebase';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { supabase } from './lib/supabase';
 import { getSiteContent } from './services/vendorService';
-import { AuthProvider } from './context/AuthContext'; // NEW
-import { AuthPage } from './components/auth/AuthPage'; // NEW
+import { AuthProvider } from './context/AuthContext';
+import { AuthPage } from './components/auth/AuthPage';
 
 // Safe lazy load with error handling
 const AdminPanel = React.lazy(() => 
@@ -43,12 +42,11 @@ function App() {
   useEffect(() => {
     const initApp = async () => {
       // 1. Check connection
-      if (db) {
+      if (supabase) {
         try {
-            const q = query(collection(db, 'vendors'), limit(1));
-            await getDocs(q);
+            await supabase.from('vendors').select('*').limit(1);
         } catch (error) {
-            console.error("Firebase Connection Failed:", error);
+            console.error("Supabase Connection Failed:", error);
         }
       }
 

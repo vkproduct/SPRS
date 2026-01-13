@@ -1,3 +1,4 @@
+
 {
   "name": "sve-za-proslavu",
   "private": true,
@@ -13,7 +14,7 @@
     "react-dom": "^18.3.1",
     "lucide-react": "^0.344.0",
     "@google/genai": "*",
-    "firebase": "^10.12.2"
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

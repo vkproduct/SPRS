@@ -1,17 +1,18 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { getMyVendorProfile, logout } from '../services/authService';
 import { Vendor } from '../types';
-import { auth, db } from '../lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { User, LogOut, LayoutDashboard, Edit, Save, Eye, MousePointer } from 'lucide-react';
+import { updateVendor } from '../services/vendorService';
 
 interface PartnerDashboardProps {
     onLogout: () => void;
 }
 
 export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) => {
+    const { currentUser } = useAuth();
     const [vendor, setVendor] = useState<Vendor | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -22,14 +23,14 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     useEffect(() => {
         const fetchProfile = async () => {
-            // SCENARIO 1: Real Firebase
-            if (auth && auth.currentUser) {
-                const profile = await getMyVendorProfile(auth.currentUser.uid);
+            // SCENARIO 1: Real Supabase
+            if (currentUser) {
+                const profile = await getMyVendorProfile(currentUser.uid);
                 setVendor(profile);
                 if (profile) setFormData(profile);
             } 
-            // SCENARIO 2: Mock Mode (Firebase not init)
-            else if (!auth) {
+            // SCENARIO 2: Mock Mode (Supabase not init)
+            else if (!supabase) {
                 const profile = await getMyVendorProfile('mock-uid');
                 setVendor(profile);
                 if (profile) setFormData(profile);
@@ -38,7 +39,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
             setLoading(false);
         };
         fetchProfile();
-    }, []);
+    }, [currentUser]);
 
     const handleLogout = async () => {
         await logout();
@@ -54,7 +55,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
         setSaving(true);
         
         // Mock Save
-        if (!db) {
+        if (!supabase) {
             await new Promise(r => setTimeout(r, 600)); // Fake delay
             setVendor({ ...vendor, ...formData });
             alert("Profil uspešno ažuriran! (Lokalna simulacija)");
@@ -64,16 +65,16 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
         // Real Save
         if (!vendor) return;
-        try {
-            await updateDoc(doc(db, 'vendors', vendor.id), formData);
+        
+        const success = await updateVendor(vendor.id, formData);
+        
+        if (success) {
             setVendor({ ...vendor, ...formData });
             alert("Profil uspešno ažuriran!");
-        } catch (error) {
-            console.error("Error updating:", error);
+        } else {
             alert("Greška pri čuvanju.");
-        } finally {
-            setSaving(false);
         }
+        setSaving(false);
     };
 
     if (loading) return <div className="min-h-screen pt-36 flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
@@ -173,8 +174,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
                                 </div>
                                 <div className="col-span-2">
                                     <span className="block text-gray-400 text-xs uppercase mb-1">Email za račun</span>
-                                    {/* Fix: Optional chaining for auth */}
-                                    <span className="font-medium">{auth?.currentUser?.email || (vendor.contact?.email)}</span>
+                                    <span className="font-medium">{currentUser?.email || (vendor.contact?.email)}</span>
                                 </div>
                             </div>
                         </div>

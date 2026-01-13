@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { UserProfile, Vendor } from '../types';
 
 interface AuthContextType {
@@ -27,34 +25,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async (uid: string) => {
+    if (!supabase) return;
+
     try {
       // 1. Try to get User Profile
       let profile: UserProfile | null = null;
-      const userDoc = await getDoc(doc(db!, 'users', uid));
+      const { data: userDoc } = await supabase.from('users').select('*').eq('uid', uid).single();
       
-      if (userDoc.exists()) {
-        profile = userDoc.data() as UserProfile;
+      if (userDoc) {
+        profile = userDoc as UserProfile;
       }
 
       // 2. Try to get Vendor Profile (if contractor)
       let vendor: Vendor | null = null;
-      // Check if user is contractor OR if we didn't find a user profile but they might be a legacy vendor
       if (profile?.role === 'contractor' || !profile) {
-        const q = query(collection(db!, 'vendors'), where("ownerId", "==", uid));
-        const vSnap = await getDocs(q);
-        if (!vSnap.empty) {
-            vendor = { id: vSnap.docs[0].id, ...vSnap.docs[0].data() } as Vendor;
+        const { data: vDoc } = await supabase.from('vendors').select('*').eq('ownerId', uid).single();
+        
+        if (vDoc) {
+            vendor = vDoc as Vendor;
             
             // Backfill profile if missing (Legacy support)
             if (!profile) {
+                const { data: { user } } = await supabase.auth.getUser();
                 profile = {
                     uid,
-                    email: auth?.currentUser?.email || '',
+                    email: user?.email || '',
                     firstName: vendor.name,
                     lastName: '',
                     phone: vendor.contact.phone,
                     role: 'contractor',
-                    createdAt: new Date()
+                    createdAt: new Date().toISOString()
                 };
             }
         }
@@ -68,14 +68,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    if (!auth) {
+    if (!supabase) {
         setLoading(false);
         return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await fetchUserData(user.uid);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserData(session.user.id).then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await fetchUserData(session.user.id);
       } else {
         setCurrentUser(null);
         setVendorProfile(null);
@@ -83,12 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
   const refreshProfile = async () => {
-    if (auth?.currentUser) {
-        await fetchUserData(auth.currentUser.uid);
+    const { data: { user } } = await supabase!.auth.getUser();
+    if (user) {
+        await fetchUserData(user.id);
     }
   };
 

@@ -1,12 +1,11 @@
 
-import { db } from '../lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp, doc, setDoc, writeBatch, Firestore, updateDoc, deleteDoc, orderBy, getDoc } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { vendors as localVendors } from '../data/database';
 import { Vendor, VendorType, Inquiry } from '../types';
 
-const VENDORS_COLLECTION = 'vendors';
-const INQUIRIES_COLLECTION = 'inquiries';
-const SETTINGS_COLLECTION = 'settings';
+const VENDORS_TABLE = 'vendors';
+const INQUIRIES_TABLE = 'inquiries';
+const SETTINGS_TABLE = 'settings';
 
 // Helper to filter local data (DRY principle)
 const getLocalFiltered = (filterType?: VendorType, categoryId?: string) => {
@@ -22,49 +21,62 @@ const getLocalFiltered = (filterType?: VendorType, categoryId?: string) => {
 
 /**
  * Fetches vendors based on filter type.
- * Tries Firebase first. If empty or error, falls back to local data.
  */
 export const getVendors = async (filterType?: VendorType, categoryId?: string): Promise<Vendor[]> => {
-  if (!db) {
-    console.warn("Firebase not initialized. Using local data.");
+  if (!supabase) {
+    console.warn("Supabase not initialized. Using local data.");
     return getLocalFiltered(filterType, categoryId);
   }
 
   try {
-    const constraints = [];
-    if (filterType) constraints.push(where("type", "==", filterType));
-    if (categoryId && categoryId !== 'all') constraints.push(where("category_id", "==", categoryId));
+    let query = supabase.from(VENDORS_TABLE).select('*');
 
-    const q = query(collection(db, VENDORS_COLLECTION), ...constraints);
-    const querySnapshot = await getDocs(q);
-    
-    // IF Firebase is empty, we return local data so the site isn't blank
-    if (querySnapshot.empty) {
-        console.log("Firebase connection successful, but collection is empty. Serving local fallback data.");
-        return getLocalFiltered(filterType, categoryId);
+    if (filterType) {
+        query = query.eq('type', filterType);
+    }
+    if (categoryId && categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
     }
 
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vendor));
+    const { data, error } = await query;
+    
+    if (error) {
+        throw error;
+    }
+
+    // IF DB is empty, we return local data so the site isn't blank
+    if (!data || data.length === 0) {
+        // Only return local data if there was no specific query filtering that returned 0
+        // But for this project, let's fallback if total count is low or connection issues.
+        // Actually, let's trust Supabase results if it's connected. 
+        // If it's a fresh migration, it might be empty.
+        // Uncomment to seed on empty:
+        // if (!filterType && !categoryId) return getLocalFiltered();
+        return [];
+    }
+
+    return data as Vendor[];
   } catch (error) {
-    console.error("Error fetching vendors from Firebase (using fallback):", error);
+    console.error("Error fetching vendors from Supabase (using fallback):", error);
     return getLocalFiltered(filterType, categoryId);
   }
 };
 
 /**
- * Adds a new Vendor to Firestore
+ * Adds a new Vendor to Supabase
  */
 export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
-    if (!db) {
-        alert("Firebase is not configured.");
+    if (!supabase) {
+        alert("Supabase is not configured.");
         return false;
     }
     try {
-        await addDoc(collection(db, VENDORS_COLLECTION), vendorData);
+        const { error } = await supabase.from(VENDORS_TABLE).insert(vendorData);
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Error adding vendor:", error);
-        alert("Greška pri dodavanju. Proverite Firestore Rules (write permissions).");
+        alert("Greška pri dodavanju.");
         return false;
     }
 };
@@ -73,10 +85,10 @@ export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
  * Updates an existing Vendor
  */
 export const updateVendor = async (id: string, vendorData: Partial<Vendor>) => {
-    if (!db) return false;
+    if (!supabase) return false;
     try {
-        const docRef = doc(db, VENDORS_COLLECTION, id);
-        await updateDoc(docRef, vendorData);
+        const { error } = await supabase.from(VENDORS_TABLE).update(vendorData).eq('id', id);
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Error updating vendor:", error);
@@ -88,9 +100,10 @@ export const updateVendor = async (id: string, vendorData: Partial<Vendor>) => {
  * Deletes a Vendor
  */
 export const deleteVendor = async (id: string) => {
-    if (!db) return false;
+    if (!supabase) return false;
     try {
-        await deleteDoc(doc(db, VENDORS_COLLECTION, id));
+        const { error } = await supabase.from(VENDORS_TABLE).delete().eq('id', id);
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Error deleting vendor:", error);
@@ -102,22 +115,14 @@ export const deleteVendor = async (id: string) => {
  * Adds multiple vendors at once (Batch)
  */
 export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
-    if (!db) {
-        alert("Firebase is not configured.");
+    if (!supabase) {
+        alert("Supabase is not configured.");
         return false;
     }
     
-    const firestore: Firestore = db;
-
     try {
-        const batch = writeBatch(firestore);
-        
-        vendorsData.forEach(vendor => {
-            const docRef = doc(collection(firestore, VENDORS_COLLECTION)); // Generate new ID
-            batch.set(docRef, vendor);
-        });
-
-        await batch.commit();
+        const { error } = await supabase.from(VENDORS_TABLE).insert(vendorsData);
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Batch upload error:", error);
@@ -127,7 +132,7 @@ export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
 };
 
 /**
- * Submits a new inquiry securely.
+ * Submits a new inquiry.
  */
 export const submitInquiry = async (data: {
     vendorId: string;
@@ -137,17 +142,18 @@ export const submitInquiry = async (data: {
     userName: string;
     contact: string;
 }) => {
-    if (!db) {
+    if (!supabase) {
         console.log("Mock submit inquiry:", data);
         return true;
     }
 
     try {
-        await addDoc(collection(db, INQUIRIES_COLLECTION), {
+        const { error } = await supabase.from(INQUIRIES_TABLE).insert({
             ...data,
-            createdAt: Timestamp.now(),
+            createdAt: new Date().toISOString(),
             status: 'new'
         });
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Error submitting inquiry:", error);
@@ -159,12 +165,15 @@ export const submitInquiry = async (data: {
  * Get all inquiries (Admin)
  */
 export const getInquiries = async (): Promise<Inquiry[]> => {
-    if (!db) return [];
+    if (!supabase) return [];
     try {
-        // Order by date desc
-        const q = query(collection(db, INQUIRIES_COLLECTION), orderBy('createdAt', 'desc'));
-        const snap = await getDocs(q);
-        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Inquiry));
+        const { data, error } = await supabase
+            .from(INQUIRIES_TABLE)
+            .select('*')
+            .order('createdAt', { ascending: false });
+        
+        if (error) throw error;
+        return data as Inquiry[];
     } catch (error) {
         console.error("Error getting inquiries:", error);
         return [];
@@ -175,9 +184,10 @@ export const getInquiries = async (): Promise<Inquiry[]> => {
  * Update Inquiry Status
  */
 export const updateInquiryStatus = async (id: string, status: 'new' | 'read' | 'replied') => {
-    if (!db) return false;
+    if (!supabase) return false;
     try {
-        await updateDoc(doc(db, INQUIRIES_COLLECTION, id), { status });
+        const { error } = await supabase.from(INQUIRIES_TABLE).update({ status }).eq('id', id);
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error("Error updating inquiry:", error);
@@ -189,12 +199,11 @@ export const updateInquiryStatus = async (id: string, status: 'new' | 'read' | '
  * Get Site Content (Homepage settings)
  */
 export const getSiteContent = async () => {
-  if (!db) return null;
+  if (!supabase) return null;
   try {
-    const docRef = doc(db, SETTINGS_COLLECTION, 'homepage');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) return snap.data();
-    return null;
+    const { data, error } = await supabase.from(SETTINGS_TABLE).select('*').eq('id', 'homepage').single();
+    if (error) return null;
+    return data;
   } catch (error) {
     console.error("Error fetching site content:", error);
     return null;
@@ -205,9 +214,11 @@ export const getSiteContent = async () => {
  * Update Site Content
  */
 export const updateSiteContent = async (data: any) => {
-  if (!db) return false;
+  if (!supabase) return false;
   try {
-    await setDoc(doc(db, SETTINGS_COLLECTION, 'homepage'), data, { merge: true });
+    // Upsert logic
+    const { error } = await supabase.from(SETTINGS_TABLE).upsert({ id: 'homepage', ...data });
+    if (error) throw error;
     return true;
   } catch (error) {
     console.error("Error updating site content:", error);
@@ -216,24 +227,26 @@ export const updateSiteContent = async (data: any) => {
 };
 
 /**
- * ONE-TIME USE: Uploads local data to Firebase.
+ * ONE-TIME USE: Uploads local data to Supabase.
  */
 export const seedDatabase = async () => {
-    if (!db) return;
+    if (!supabase) return;
     
-    const firestore: Firestore = db;
-
     console.log("Starting database seed...");
     let count = 0;
     
-    for (const vendor of localVendors) {
-        try {
-            await setDoc(doc(firestore, VENDORS_COLLECTION, vendor.id), vendor);
-            count++;
-            console.log(`Uploaded: ${vendor.name}`);
-        } catch (e) {
-            console.error(`Failed to upload ${vendor.name}:`, e);
+    // We can filter out IDs that might conflict or let Supabase generate them if we modify the type
+    // Here we assume standard insert
+    
+    // Chunking to avoid payload limit if array is huge (it's small now)
+    try {
+        const { error } = await supabase.from(VENDORS_TABLE).insert(localVendors);
+        if (error) {
+            console.error("Seed error:", error);
+        } else {
+            console.log(`Seeding complete. Uploaded ${localVendors.length} vendors.`);
         }
+    } catch (e) {
+        console.error("Seed exception:", e);
     }
-    console.log(`Seeding complete. Uploaded ${count} vendors.`);
 };

@@ -1,16 +1,9 @@
 
-import { auth, db } from '../lib/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  updateProfile
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { Vendor, UserProfile, UserRole } from '../types';
 
 // Helper for Mock Mode
-const isMockMode = !auth || !db;
+const isMockMode = !supabase;
 
 // --- UTILS ---
 export const validateEmail = (email: string) => {
@@ -34,31 +27,44 @@ export const validatePhoneRS = (phone: string) => {
  * Register a regular User (Organizer)
  */
 export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'createdAt'> & { password: string }) => {
-  if (isMockMode) throw new Error("Firebase nije konfigurisan.");
+  if (isMockMode) throw new Error("Supabase nije konfigurisan.");
 
   // 1. Create Auth User
-  const userCredential = await createUserWithEmailAndPassword(auth!, data.email, data.password);
-  const user = userCredential.user;
+  const { data: authData, error: authError } = await supabase!.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      data: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        full_name: `${data.firstName} ${data.lastName}`
+      }
+    }
+  });
 
-  // 2. Create User Profile in Firestore
+  if (authError) throw authError;
+  if (!authData.user) throw new Error("Registracija nije uspela.");
+
+  // 2. Create User Profile in Supabase 'users' table
   const userProfile: UserProfile = {
-    uid: user.uid,
+    uid: authData.user.id,
     email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
     phone: data.phone,
     role: 'user',
-    createdAt: Timestamp.now(),
+    createdAt: new Date().toISOString(),
     eventDate: data.eventDate,
     eventType: data.eventType,
     guestCount: data.guestCount,
     preferences: data.preferences
   };
 
-  await setDoc(doc(db!, 'users', user.uid), userProfile);
-  
-  // Update Display Name
-  await updateProfile(user, { displayName: `${data.firstName} ${data.lastName}` });
+  const { error: profileError } = await supabase!
+    .from('users')
+    .insert(userProfile);
+
+  if (profileError) throw profileError;
 
   return userProfile;
 };
@@ -70,32 +76,47 @@ export const registerContractor = async (
   loginData: { email: string; password: string },
   vendorData: any
 ) => {
-  if (isMockMode) throw new Error("Firebase nije konfigurisan.");
+  if (isMockMode) throw new Error("Supabase nije konfigurisan.");
 
   // 1. Create Auth User
-  const userCredential = await createUserWithEmailAndPassword(auth!, loginData.email, loginData.password);
-  const user = userCredential.user;
+  const { data: authData, error: authError } = await supabase!.auth.signUp({
+    email: loginData.email,
+    password: loginData.password,
+    options: {
+      data: {
+        first_name: vendorData.contactFirstName,
+        last_name: vendorData.contactLastName,
+        full_name: `${vendorData.contactFirstName} ${vendorData.contactLastName}`
+      }
+    }
+  });
 
-  // 2. Create Vendor Profile linked to ownerId
-  // Note: We don't necessarily need a 'users' doc for contractors if we query 'vendors' by ownerId,
-  // but creating a minimal user doc helps with role resolution.
+  if (authError) throw authError;
+  if (!authData.user) throw new Error("Registracija nije uspela.");
+
+  // 2. Create User Profile
   const userProfile: UserProfile = {
-    uid: user.uid,
+    uid: authData.user.id,
     email: loginData.email,
     firstName: vendorData.contactFirstName,
     lastName: vendorData.contactLastName,
     phone: vendorData.phone,
     role: 'contractor',
-    createdAt: Timestamp.now()
+    createdAt: new Date().toISOString()
   };
-  await setDoc(doc(db!, 'users', user.uid), userProfile);
+
+  const { error: profileError } = await supabase!
+    .from('users')
+    .insert(userProfile);
+
+  if (profileError) throw profileError;
 
   // 3. Create Vendor Document
-  const newVendorId = `partner-${user.uid.slice(0, 8)}`;
+  const newVendorId = `partner-${authData.user.id.slice(0, 8)}`;
   
   const vendorStub: any = {
     id: newVendorId,
-    ownerId: user.uid,
+    ownerId: authData.user.id,
     name: vendorData.venueName || vendorData.companyName,
     pib: vendorData.taxId,
     type: vendorData.type || 'VENUE', 
@@ -123,8 +144,11 @@ export const registerContractor = async (
     })
   };
 
-  await setDoc(doc(db!, 'vendors', newVendorId), vendorStub);
-  await updateProfile(user, { displayName: vendorData.venueName });
+  const { error: vendorError } = await supabase!
+    .from('vendors')
+    .insert(vendorStub);
+
+  if (vendorError) throw vendorError;
 
   return { user: userProfile, vendor: vendorStub };
 };
@@ -145,55 +169,80 @@ export const loginUnified = async (email: string, pass: string) => {
       } as UserProfile;
   }
 
-  // 1. Firebase Auth Login
-  const userCredential = await signInWithEmailAndPassword(auth!, email, pass);
-  const uid = userCredential.user.uid;
+  // 1. Supabase Auth Login
+  const { data: authData, error: authError } = await supabase!.auth.signInWithPassword({
+    email,
+    password: pass
+  });
+
+  if (authError) throw authError;
+  const user = authData.user;
+  if (!user) throw new Error("Prijavljivanje nije uspelo.");
 
   // 2. Determine Role
-  // First check 'users' collection
-  const userDocRef = doc(db!, 'users', uid);
-  const userDoc = await getDoc(userDocRef);
+  // First check 'users' table
+  const { data: userProfile, error: userError } = await supabase!
+    .from('users')
+    .select('*')
+    .eq('uid', user.id)
+    .single();
 
-  if (userDoc.exists()) {
-      return userDoc.data() as UserProfile;
+  if (userProfile) {
+      return userProfile as UserProfile;
   }
 
-  // Fallback: Check if they are a legacy vendor without a user doc
-  const q = query(collection(db!, 'vendors'), where("ownerId", "==", uid));
-  const vendorSnap = await getDocs(q);
+  // Fallback: Check if they are a legacy vendor without a user doc (unlikely in Supabase fresh start but good for migration logic)
+  const { data: vendorData } = await supabase!
+    .from('vendors')
+    .select('*')
+    .eq('ownerId', user.id)
+    .single();
 
-  if (!vendorSnap.empty) {
-      // Reconstruct minimal profile for legacy vendor
+  if (vendorData) {
       return {
-          uid,
+          uid: user.id,
           email,
           firstName: 'Partner',
           lastName: '',
           phone: '',
           role: 'contractor',
-          createdAt: Timestamp.now()
+          createdAt: new Date().toISOString()
       } as UserProfile;
   }
 
-  // Fallback 2: Admin?
-  if (email === 'admin@svezaproslavu.rs') { // Or check custom claims
+  // Fallback 2: Admin check
+  if (email === 'admin@svezaproslavu.rs') { 
        return {
-          uid,
+          uid: user.id,
           email,
           firstName: 'Admin',
           lastName: '',
           phone: '',
           role: 'admin',
-          createdAt: Timestamp.now()
+          createdAt: new Date().toISOString()
       } as UserProfile;
   }
 
-  throw new Error("Profil nije pronađen.");
+  // If no profile found but auth succeeded, create a default user profile
+  // This handles cases where user signed up but DB insert failed previously
+  const defaultProfile: UserProfile = {
+      uid: user.id,
+      email: email,
+      firstName: user.user_metadata?.first_name || 'Korisnik',
+      lastName: user.user_metadata?.last_name || '',
+      phone: '',
+      role: 'user',
+      createdAt: new Date().toISOString()
+  };
+  
+  await supabase!.from('users').insert(defaultProfile);
+  
+  return defaultProfile;
 };
 
 export const logout = async () => {
     if (isMockMode) return;
-    return await signOut(auth!);
+    return await supabase!.auth.signOut();
 };
 
 /**
@@ -201,8 +250,12 @@ export const logout = async () => {
  */
 export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> => {
     if (isMockMode) return null;
-    const q = query(collection(db!, 'vendors'), where("ownerId", "==", uid));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Vendor;
+    const { data, error } = await supabase!
+        .from('vendors')
+        .select('*')
+        .eq('ownerId', uid)
+        .single();
+    
+    if (error || !data) return null;
+    return data as Vendor;
 };
