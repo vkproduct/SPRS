@@ -13,7 +13,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home', customPreheader }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
-  const { currentUser } = useAuth(); // Use Auth Context instead of direct firebase
+  const { currentUser } = useAuth(); 
 
   useEffect(() => {
     const handleScroll = () => {

@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Access env safely to prevent crash if import.meta.env is undefined
 const env = (import.meta as any).env;
@@ -19,7 +19,7 @@ export type Database = {
   };
 };
 
-let supabase: ReturnType<typeof createClient<Database>> | null = null;
+let supabase: SupabaseClient<Database> | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {
     supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);

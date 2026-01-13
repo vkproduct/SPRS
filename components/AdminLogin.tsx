@@ -12,7 +12,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple hardcoded check for demonstration (In prod, use Firebase Auth)
+    // Simple hardcoded check for demonstration (In prod, use Supabase Auth)
     if (password === 'admin' || password === 'sveza2025' || password === 'admin123') {
       onLogin();
     } else {

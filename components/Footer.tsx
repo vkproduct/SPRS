@@ -12,7 +12,7 @@ export const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
   // Hidden developer tool
   const handleDevClick = (e: React.MouseEvent) => {
     if (e.detail === 3) { // Triple click
-        const confirm = window.confirm("Developer Action: Upload local data to Firebase? (Check console for output)");
+        const confirm = window.confirm("Developer Action: Upload local data to Supabase? (Check console for output)");
         if (confirm) {
             seedDatabase();
         }
