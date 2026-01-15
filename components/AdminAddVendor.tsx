@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Save, Upload, Download, FileText, Plus, Trash2 } from 'lucide-react';
 import { addVendor, addVendorsBatch, updateVendor } from '../services/vendorService';
 import { Vendor } from '../types';
+import { useAuth } from '../context/AuthContext';
 
-// 1. КОНСТАНТЫ (Определены снаружи компонента)
+// 1. КОНСТАНТЫ
 const VENUE_SUBCATEGORIES = [
     { id: 'Restoran', name: 'Restoran' },
     { id: 'Svečana sala', name: 'Svečana sala (Banket)' },
@@ -23,12 +24,11 @@ interface AdminAddVendorProps {
 }
 
 export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialData }) => {
-  // 2. БЕЗОПАСНЫЕ DEFAULTS
+  const { currentUser } = useAuth();
   const defaultVenueType = VENUE_SUBCATEGORIES[0]?.id || 'Restoran';
   const isEditMode = !!initialData;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 3. СОСТОЯНИЕ (STATE)
   const [loading, setLoading] = useState(false);
   const [galleryInputs, setGalleryInputs] = useState<string[]>([]);
   const [formData, setFormData] = useState<any>({
@@ -48,7 +48,6 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
     google_maps_url: ''
   });
 
-  // 4. ЭФФЕКТЫ (Инициализация данных)
   useEffect(() => {
     if (initialData) {
         setFormData({
@@ -59,7 +58,6 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
             category_id: initialData.category_id,
             venue_type: (initialData as any).venue_type || defaultVenueType,
             description: initialData.description || '',
-            // Ensure we fallback to empty string if undefined to avoid "uncontrolled input" error
             price_from: (initialData.type === 'VENUE' ? initialData.pricing?.per_person_from : (initialData.pricing as any)?.package_from) || '',
             capacity_min: (initialData.type === 'VENUE' ? initialData.capacity?.min : '') || '',
             capacity_max: (initialData.type === 'VENUE' ? initialData.capacity?.max : '') || '',
@@ -75,7 +73,6 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
     }
   }, [initialData, defaultVenueType]);
 
-  // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
   const safeStr = (val: any): string => {
     if (val === null || val === undefined) return '';
     return String(val).trim();
@@ -101,7 +98,11 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
     if (slug.endsWith('-')) slug = slug.slice(0, -1);
     if (!slug) slug = `vendor-${Date.now()}`;
 
+    // IMPORTANT: Inject Owner ID from Auth Context if missing (for RLS)
+    const ownerId = isEditMode ? initialData?.ownerId : currentUser?.uid;
+
     const newVendor: any = {
+      ownerId: ownerId, 
       type: safeType,
       name: safeName,
       slug: slug,
@@ -143,7 +144,6 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
     return JSON.parse(JSON.stringify(newVendor));
   };
 
-  // 6. ОБРАБОТЧИКИ СОБЫТИЙ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -187,7 +187,7 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
         }
     } catch (error) {
         console.error("Error submitting form:", error);
-        alert("Greška pri čuvanju данных. Проверьте консоль.");
+        alert("Greška pri čuvanju podataka. Proverite konzolu.");
     } finally {
         setLoading(false);
     }
@@ -232,10 +232,8 @@ export const AdminAddVendor: React.FC<AdminAddVendorProps> = ({ onBack, initialD
                 
                 if (cols.length < 2) return;
                 
-                // Простая эвристика парсинга
                 let rawData: any = {};
                 
-                // Проверка на достаточность колонок
                 if (cols.length >= 10) {
                      let allImages: string[] = [];
                      const imgCol = cols.length > 9 ? cols[9] : cols[8];

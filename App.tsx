@@ -17,7 +17,7 @@ import { SEOManager } from './components/SEOManager';
 import { Vendor } from './types';
 import { supabase } from './lib/supabase';
 import { getSiteContent } from './services/vendorService';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthPage } from './components/auth/AuthPage';
 
 // Safe lazy load with error handling
@@ -31,12 +31,13 @@ const AdminPanel = React.lazy(() =>
 
 export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel' | 'login' | 'register';
 
-function App() {
+function MainContent() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [targetCategory, setTargetCategory] = useState<string | null>(null);
   const [cmsContent, setCmsContent] = useState<any>(null); 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  
+  const { currentUser, loading: authLoading } = useAuth();
 
   // Connection check and Content Load
   useEffect(() => {
@@ -119,11 +120,6 @@ function App() {
     }
   };
 
-  const handleAdminLoginSuccess = () => {
-      setIsAdminAuthenticated(true);
-      handleNavigate('admin-panel');
-  };
-
   // --- JSON-LD GENERATION ---
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -140,147 +136,157 @@ function App() {
     }
   };
 
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-slate-50 font-sans">
-        
-        {/* Hide Header on Admin Pages */}
-        {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
-          <Header 
-              onNavigate={handleNavigate} 
-              currentView={currentView} 
-              customPreheader={cmsContent?.preheaderText} 
-          />
+    <div className="min-h-screen bg-slate-50 font-sans">
+      
+      {/* Hide Header on Admin Pages */}
+      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+        <Header 
+            onNavigate={handleNavigate} 
+            currentView={currentView} 
+            customPreheader={cmsContent?.preheaderText} 
+        />
+      )}
+      
+      <main>
+        {currentView === 'home' && (
+          <>
+            <SEOManager 
+              title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
+              description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
+              jsonLd={organizationSchema}
+            />
+            <Hero 
+                title={cmsContent?.heroTitle}         
+                subtitle={cmsContent?.heroSubtitle}   
+                imageUrl={cmsContent?.heroImage}      
+            />
+            <Categories onCategoryClick={handleCategoryClick} />
+            <AiPlanner />
+            <LeadForm />
+          </>
         )}
         
-        <main>
-          {currentView === 'home' && (
-            <>
-              <SEOManager 
-                title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
-                description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
-                jsonLd={organizationSchema}
-              />
-              <Hero 
-                  title={cmsContent?.heroTitle}         
-                  subtitle={cmsContent?.heroSubtitle}   
-                  imageUrl={cmsContent?.heroImage}      
-              />
-              <Categories onCategoryClick={handleCategoryClick} />
-              <AiPlanner />
-              <LeadForm />
-            </>
-          )}
-          
-          {currentView === 'partners' && (
-            <>
-              <SEOManager 
-                title="Postanite Partner | SveZaProslavu.rs"
-                description="Registrujte svoj restoran, bend ili agenciju. Popunite termine tokom cele godine."
-                canonical="https://svezaproslavu.rs/partners"
-              />
-              <ForPartners onNavigate={handleNavigate} />
-            </>
-          )}
+        {currentView === 'partners' && (
+          <>
+            <SEOManager 
+              title="Postanite Partner | SveZaProslavu.rs"
+              description="Registrujte svoj restoran, bend ili agenciju. Popunite termine tokom cele godine."
+              canonical="https://svezaproslavu.rs/partners"
+            />
+            <ForPartners onNavigate={handleNavigate} />
+          </>
+        )}
 
-          {currentView === 'venues' && (
-            <>
-               <SEOManager 
-                title="Sale za Svadbe i Proslave Beograd, Novi Sad | SveZaProslavu.rs"
-                description="Istražite najbolje restorane, sale za venčanja i prostore za događaje u Srbiji. Pogledajte cene, slike i kapacitete."
-                canonical="https://svezaproslavu.rs/venues"
-              />
-              <VenueList 
-                onVenueSelect={handleVendorSelect} 
-                initialCategoryId={targetCategory} 
-                filterType="VENUE"
-              />
-            </>
-          )}
-
-          {currentView === 'services' && (
-            <>
+        {currentView === 'venues' && (
+          <>
               <SEOManager 
-                title="Muzika, Fotografi i Dekoracija za Proslave | SveZaProslavu.rs"
-                description="Pronađite bendove za svadbe, profesionalne fotografe i dekoratere za vaš događaj."
-                canonical="https://svezaproslavu.rs/services"
-              />
-              <VenueList 
-                onVenueSelect={handleVendorSelect} 
-                initialCategoryId={targetCategory} 
-                filterType="SERVICE"
-              />
-            </>
-          )}
-
-          {currentView === 'goods-categories' && (
-             <>
-              <SEOManager 
-                title="Venčanice, Odela i Pozivnice | SveZaProslavu.rs Shop"
-                description="Katalog venčanica, muških odela, burmi i poklona za goste. Kupovina i iznajmljivanje."
-                canonical="https://svezaproslavu.rs/goods"
-              />
-              <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
-             </>
-          )}
-
-          {currentView === 'goods-list' && (
+              title="Sale za Svadbe i Proslave Beograd, Novi Sad | SveZaProslavu.rs"
+              description="Istražite najbolje restorane, sale za venčanja i prostore za događaje u Srbiji. Pogledajte cene, slike i kapacitete."
+              canonical="https://svezaproslavu.rs/venues"
+            />
             <VenueList 
               onVenueSelect={handleVendorSelect} 
               initialCategoryId={targetCategory} 
-              filterType="PRODUCT"
+              filterType="VENUE"
             />
-          )}
-
-          {currentView === 'venue-details' && selectedVendor && (
-            <VenueDetails venue={selectedVendor} onBack={handleBack} />
-          )}
-
-          {currentView === 'admin-add' && (
-            <AdminAddVendor onBack={() => handleNavigate('home')} />
-          )}
-
-          {/* ADMIN GATEWAY */}
-          {currentView === 'admin-login' && (
-              <AdminLogin onLogin={handleAdminLoginSuccess} />
-          )}
-
-          {/* ADMIN PANEL (Lazy Loaded & Protected) */}
-          {currentView === 'admin-panel' && (
-              <Suspense fallback={
-                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-                      <div className="ml-4 font-medium text-gray-500">Učitavanje panela...</div>
-                  </div>
-              }>
-                  {isAdminAuthenticated ? (
-                      <AdminPanel onLogout={() => handleNavigate('home')} />
-                  ) : (
-                      <AdminLogin onLogin={handleAdminLoginSuccess} />
-                  )}
-              </Suspense>
-          )}
-
-          {/* Legacy Partner Auth Route - redirects to new flow implicitly via UI buttons or logic */}
-          {currentView === 'partner-auth' && (
-               <AuthPage initialView="login" onNavigate={(v) => handleNavigate(v as ViewType)} />
-          )}
-
-          {/* NEW AUTH ROUTES */}
-          {(currentView === 'login' || currentView === 'register') && (
-               <AuthPage initialView={currentView} onNavigate={(v) => handleNavigate(v as ViewType)} />
-          )}
-
-          {currentView === 'partner-dashboard' && (
-              <PartnerDashboard onLogout={() => handleNavigate('home')} />
-          )}
-        </main>
-
-        {/* Hide Footer on Admin Panel */}
-        {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
-            <Footer onAdminClick={() => handleNavigate('admin-login')} />
+          </>
         )}
-      </div>
+
+        {currentView === 'services' && (
+          <>
+            <SEOManager 
+              title="Muzika, Fotografi i Dekoracija za Proslave | SveZaProslavu.rs"
+              description="Pronađite bendove za svadbe, profesionalne fotografe i dekoratere za vaš događaj."
+              canonical="https://svezaproslavu.rs/services"
+            />
+            <VenueList 
+              onVenueSelect={handleVendorSelect} 
+              initialCategoryId={targetCategory} 
+              filterType="SERVICE"
+            />
+          </>
+        )}
+
+        {currentView === 'goods-categories' && (
+            <>
+            <SEOManager 
+              title="Venčanice, Odela i Pozivnice | SveZaProslavu.rs Shop"
+              description="Katalog venčanica, muških odela, burmi i poklona za goste. Kupovina i iznajmljivanje."
+              canonical="https://svezaproslavu.rs/goods"
+            />
+            <GoodsCategories onCategoryClick={handleGoodsCategoryClick} />
+            </>
+        )}
+
+        {currentView === 'goods-list' && (
+          <VenueList 
+            onVenueSelect={handleVendorSelect} 
+            initialCategoryId={targetCategory} 
+            filterType="PRODUCT"
+          />
+        )}
+
+        {currentView === 'venue-details' && selectedVendor && (
+          <VenueDetails venue={selectedVendor} onBack={handleBack} />
+        )}
+
+        {currentView === 'admin-add' && (
+          <AdminAddVendor onBack={() => handleNavigate('home')} />
+        )}
+
+        {/* ADMIN GATEWAY */}
+        {currentView === 'admin-login' && (
+            <AdminLogin onLogin={() => handleNavigate('admin-panel')} />
+        )}
+
+        {/* ADMIN PANEL (Lazy Loaded & Protected) */}
+        {currentView === 'admin-panel' && (
+            <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                    <div className="ml-4 font-medium text-gray-500">Učitavanje panela...</div>
+                </div>
+            }>
+                {authLoading ? (
+                    <div>Provera prava pristupa...</div>
+                ) : isAdmin ? (
+                    <AdminPanel onLogout={() => handleNavigate('home')} />
+                ) : (
+                    <AdminLogin onLogin={() => handleNavigate('admin-panel')} />
+                )}
+            </Suspense>
+        )}
+
+        {/* Legacy Partner Auth Route */}
+        {currentView === 'partner-auth' && (
+              <AuthPage initialView="login" onNavigate={(v) => handleNavigate(v as ViewType)} />
+        )}
+
+        {/* NEW AUTH ROUTES */}
+        {(currentView === 'login' || currentView === 'register') && (
+              <AuthPage initialView={currentView} onNavigate={(v) => handleNavigate(v as ViewType)} />
+        )}
+
+        {currentView === 'partner-dashboard' && (
+            <PartnerDashboard onLogout={() => handleNavigate('home')} />
+        )}
+      </main>
+
+      {/* Hide Footer on Admin Panel */}
+      {currentView !== 'admin-panel' && currentView !== 'admin-login' && (
+          <Footer onAdminClick={() => handleNavigate('admin-login')} />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <MainContent />
     </AuthProvider>
   );
 }

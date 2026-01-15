@@ -1,22 +1,37 @@
 
 import React, { useState } from 'react';
-import { Lock, ArrowRight, ShieldCheck, Home } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, Home, Mail } from 'lucide-react';
+import { loginUnified } from '../services/authService';
 
 interface AdminLoginProps {
   onLogin: () => void;
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple hardcoded check for demonstration (In prod, use Supabase Auth)
-    if (password === 'admin' || password === 'sveza2025' || password === 'admin123') {
-      onLogin();
-    } else {
-      setError('Pogrešna lozinka. Pokušajte ponovo.');
+    setLoading(true);
+    setError('');
+
+    try {
+        // Attempt login via Supabase
+        const user = await loginUnified(email, password);
+        
+        if (user.role === 'admin') {
+            onLogin();
+        } else {
+            setError('Ovaj nalog nema admin prava.');
+        }
+    } catch (err: any) {
+        console.error(err);
+        setError('Neuspešna prijava. Proverite podatke.');
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -31,18 +46,34 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           <p className="text-gray-500 text-sm mt-2">Sigurnosna provera za pristup panelu.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Pristupna šifra</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Email</label>
+                <div className="relative">
+                    <Mail className="absolute left-4 top-4 text-gray-400" size={18} />
+                    <input 
+                        type="email" 
+                        autoFocus
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-gray-50 focus:bg-white"
+                        placeholder="admin@svezaproslavu.rs"
+                        required
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Lozinka</label>
                 <div className="relative">
                     <Lock className="absolute left-4 top-4 text-gray-400" size={18} />
                     <input 
                         type="password" 
-                        autoFocus
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-lg bg-gray-50 focus:bg-white"
-                        placeholder="Unesite lozinku..."
+                        className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-gray-50 focus:bg-white"
+                        placeholder="••••••••"
+                        required
                     />
                 </div>
             </div>
@@ -55,9 +86,10 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             <button 
                 type="submit" 
-                className="w-full bg-portal-dark text-white font-bold py-4 rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
+                disabled={loading}
+                className="w-full bg-portal-dark text-white font-bold py-4 rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-                Pristupi Panelu <ArrowRight size={20} />
+                {loading ? 'Provera...' : <><span className="mr-1">Pristupi Panelu</span> <ArrowRight size={20} /></>}
             </button>
         </form>
         
