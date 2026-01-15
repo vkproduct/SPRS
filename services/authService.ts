@@ -37,7 +37,8 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
       data: {
         first_name: data.firstName,
         last_name: data.lastName,
-        full_name: `${data.firstName} ${data.lastName}`
+        full_name: `${data.firstName} ${data.lastName}`,
+        role: 'user' // Metadata fallback
       }
     }
   });
@@ -46,27 +47,36 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
   if (!authData.user) throw new Error("Registracija nije uspela.");
 
   // 2. Create User Profile in Supabase 'users' table
-  const userProfile: UserProfile = {
+  // MAPPING: camelCase (JS) -> snake_case (DB)
+  const userProfilePayload = {
     uid: authData.user.id,
     email: data.email,
-    firstName: data.firstName,
-    lastName: data.lastName,
+    first_name: data.firstName,
+    last_name: data.lastName,
     phone: data.phone,
     role: 'user',
-    createdAt: new Date().toISOString(),
-    eventDate: data.eventDate,
-    eventType: data.eventType,
-    guestCount: data.guestCount,
+    created_at: new Date().toISOString(),
+    event_date: data.eventDate,
+    event_type: data.eventType,
+    guest_count: data.guestCount,
     preferences: data.preferences
   };
 
   const { error: profileError } = await supabase!
     .from('users')
-    .insert(userProfile);
+    .insert(userProfilePayload);
 
-  if (profileError) throw profileError;
+  // Note: We don't throw on profileError if Auth succeeded, 
+  // because loginUnified can self-heal the profile later.
+  if (profileError) console.error("Profile creation warning:", profileError);
 
-  return userProfile;
+  // Return frontend friendly object
+  return {
+    uid: authData.user.id,
+    ...data,
+    role: 'user' as UserRole,
+    createdAt: userProfilePayload.created_at
+  };
 };
 
 /**
@@ -86,7 +96,8 @@ export const registerContractor = async (
       data: {
         first_name: vendorData.contactFirstName,
         last_name: vendorData.contactLastName,
-        full_name: `${vendorData.contactFirstName} ${vendorData.contactLastName}`
+        full_name: `${vendorData.contactFirstName} ${vendorData.contactLastName}`,
+        role: 'contractor' // Metadata fallback
       }
     }
   });
@@ -95,28 +106,30 @@ export const registerContractor = async (
   if (!authData.user) throw new Error("Registracija nije uspela.");
 
   // 2. Create User Profile
-  const userProfile: UserProfile = {
+  const userProfilePayload = {
     uid: authData.user.id,
     email: loginData.email,
-    firstName: vendorData.contactFirstName,
-    lastName: vendorData.contactLastName,
+    first_name: vendorData.contactFirstName,
+    last_name: vendorData.contactLastName,
     phone: vendorData.phone,
     role: 'contractor',
-    createdAt: new Date().toISOString()
+    created_at: new Date().toISOString()
   };
 
   const { error: profileError } = await supabase!
     .from('users')
-    .insert(userProfile);
+    .insert(userProfilePayload);
 
-  if (profileError) throw profileError;
+  if (profileError) console.error("User profile warning:", profileError);
 
   // 3. Create Vendor Document
+  // Use a reliable ID that can be derived or is unique
   const newVendorId = `partner-${authData.user.id.slice(0, 8)}`;
   
-  const vendorStub: any = {
+  // Mapping to DB Columns
+  const vendorPayload: any = {
     id: newVendorId,
-    ownerId: authData.user.id,
+    owner_id: authData.user.id,
     name: vendorData.venueName || vendorData.companyName,
     pib: vendorData.taxId,
     type: vendorData.type || 'VENUE', 
@@ -146,11 +159,11 @@ export const registerContractor = async (
 
   const { error: vendorError } = await supabase!
     .from('vendors')
-    .insert(vendorStub);
+    .insert(vendorPayload);
 
   if (vendorError) throw vendorError;
 
-  return { user: userProfile, vendor: vendorStub };
+  return { user: userProfilePayload, vendor: vendorPayload };
 };
 
 /**
@@ -181,36 +194,30 @@ export const loginUnified = async (email: string, pass: string) => {
 
   // 2. Determine Role
   // First check 'users' table
-  const { data: userProfile, error: userError } = await supabase!
+  const { data: userRow, error: userError } = await supabase!
     .from('users')
     .select('*')
     .eq('uid', user.id)
-    .single();
+    .maybeSingle();
 
-  if (userProfile) {
-      return userProfile as UserProfile;
-  }
-
-  // Fallback: Check if they are a legacy vendor without a user doc (unlikely in Supabase fresh start but good for migration logic)
-  const { data: vendorData } = await supabase!
-    .from('vendors')
-    .select('*')
-    .eq('ownerId', user.id)
-    .single();
-
-  if (vendorData) {
+  if (userRow) {
+      // Map back to CamelCase for frontend
       return {
-          uid: user.id,
-          email,
-          firstName: 'Partner',
-          lastName: '',
-          phone: '',
-          role: 'contractor',
-          createdAt: new Date().toISOString()
+        uid: userRow.uid,
+        email: userRow.email,
+        firstName: userRow.first_name,
+        lastName: userRow.last_name,
+        phone: userRow.phone,
+        role: userRow.role,
+        createdAt: userRow.created_at,
+        eventDate: userRow.event_date,
+        eventType: userRow.event_type,
+        guestCount: userRow.guest_count,
+        preferences: userRow.preferences
       } as UserProfile;
   }
 
-  // Fallback 2: Admin check
+  // Fallback 1: Admin check via Email
   if (email === 'admin@svezaproslavu.rs') { 
        return {
           uid: user.id,
@@ -223,21 +230,37 @@ export const loginUnified = async (email: string, pass: string) => {
       } as UserProfile;
   }
 
-  // If no profile found but auth succeeded, create a default user profile
-  // This handles cases where user signed up but DB insert failed previously
-  const defaultProfile: UserProfile = {
+  // Fallback 2: Check for Vendor existence to infer role
+  const { data: vendorData } = await supabase!
+    .from('vendors')
+    .select('*')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  const inferredRole = vendorData ? 'contractor' : (user.user_metadata?.role || 'user');
+
+  // SELF HEALING: Create default profile if missing from 'users' table
+  // This happens if registration inserts failed but Auth succeeded
+  const defaultProfilePayload = {
       uid: user.id,
       email: email,
-      firstName: user.user_metadata?.first_name || 'Korisnik',
-      lastName: user.user_metadata?.last_name || '',
-      phone: '',
-      role: 'user',
-      createdAt: new Date().toISOString()
+      first_name: user.user_metadata?.first_name || 'Korisnik',
+      last_name: user.user_metadata?.last_name || '',
+      role: inferredRole,
+      created_at: new Date().toISOString()
   };
   
-  await supabase!.from('users').insert(defaultProfile);
+  await supabase!.from('users').upsert(defaultProfilePayload);
   
-  return defaultProfile;
+  return {
+      uid: defaultProfilePayload.uid,
+      email: defaultProfilePayload.email,
+      firstName: defaultProfilePayload.first_name,
+      lastName: defaultProfilePayload.last_name,
+      role: defaultProfilePayload.role as UserRole,
+      createdAt: defaultProfilePayload.created_at,
+      phone: ''
+  };
 };
 
 export const logout = async () => {
@@ -253,9 +276,15 @@ export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> =>
     const { data, error } = await supabase!
         .from('vendors')
         .select('*')
-        .eq('ownerId', uid)
-        .single();
+        .eq('owner_id', uid)
+        .maybeSingle();
     
     if (error || !data) return null;
-    return data as Vendor;
+    
+    // Map snake_case to CamelCase
+    const v = data;
+    return {
+        ...v,
+        ownerId: v.owner_id
+    } as Vendor;
 };

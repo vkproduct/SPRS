@@ -44,18 +44,15 @@ export const getVendors = async (filterType?: VendorType, categoryId?: string): 
         throw error;
     }
 
-    // IF DB is empty, we return local data so the site isn't blank
     if (!data || data.length === 0) {
-        // Only return local data if there was no specific query filtering that returned 0
-        // But for this project, let's fallback if total count is low or connection issues.
-        // Actually, let's trust Supabase results if it's connected. 
-        // If it's a fresh migration, it might be empty.
-        // Uncomment to seed on empty:
-        // if (!filterType && !categoryId) return getLocalFiltered();
         return [];
     }
 
-    return data as Vendor[];
+    // Map DB snake_case to TS camelCase
+    return data.map((v: any) => ({
+        ...v,
+        ownerId: v.owner_id
+    })) as Vendor[];
   } catch (error) {
     console.error("Error fetching vendors from Supabase (using fallback):", error);
     return getLocalFiltered(filterType, categoryId);
@@ -71,7 +68,23 @@ export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
         return false;
     }
     try {
-        const { error } = await supabase.from(VENDORS_TABLE).insert(vendorData);
+        // Generate a random ID if not present (Simple unique string)
+        const genId = `v-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        // Map keys to snake_case for DB
+        const dbPayload = {
+            id: genId,
+            ...vendorData,
+            owner_id: vendorData.ownerId,
+            category_id: vendorData.category_id,
+            venue_type: (vendorData as any).venue_type,
+            service_type: (vendorData as any).service_type,
+            product_type: (vendorData as any).product_type
+        };
+        // Remove undefined/camelCase keys from spread
+        delete (dbPayload as any).ownerId;
+
+        const { error } = await supabase.from(VENDORS_TABLE).insert(dbPayload);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -87,7 +100,14 @@ export const addVendor = async (vendorData: Omit<Vendor, 'id'>) => {
 export const updateVendor = async (id: string, vendorData: Partial<Vendor>) => {
     if (!supabase) return false;
     try {
-        const { error } = await supabase.from(VENDORS_TABLE).update(vendorData).eq('id', id);
+        // Map keys
+        const dbPayload: any = { ...vendorData };
+        if (vendorData.ownerId) {
+            dbPayload.owner_id = vendorData.ownerId;
+            delete dbPayload.ownerId;
+        }
+
+        const { error } = await supabase.from(VENDORS_TABLE).update(dbPayload).eq('id', id);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -121,7 +141,21 @@ export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
     }
     
     try {
-        const { error } = await supabase.from(VENDORS_TABLE).insert(vendorsData);
+        // Map all items
+        const dbPayloads = vendorsData.map((v, index) => ({
+            id: `batch-${Date.now()}-${index}`,
+            ...v,
+            owner_id: v.ownerId,
+            venue_type: (v as any).venue_type,
+            // ensure other fields are present and mapped
+        }));
+        
+        // Clean up camelCase keys from payloads
+        dbPayloads.forEach((p: any) => {
+             delete p.ownerId;
+        });
+
+        const { error } = await supabase.from(VENDORS_TABLE).insert(dbPayloads);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -148,11 +182,19 @@ export const submitInquiry = async (data: {
     }
 
     try {
-        const { error } = await supabase.from(INQUIRIES_TABLE).insert({
-            ...data,
-            createdAt: new Date().toISOString(),
-            status: 'new'
-        });
+        // Map to snake_case
+        const payload = {
+            vendor_id: data.vendorId,
+            vendor_name: data.vendorName,
+            user_name: data.userName,
+            contact: data.contact,
+            date: data.date,
+            guest_count: data.guestCount,
+            status: 'new',
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase.from(INQUIRIES_TABLE).insert(payload);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -162,7 +204,7 @@ export const submitInquiry = async (data: {
 };
 
 /**
- * Get all inquiries (Admin)
+ * Get all inquiries (Admin / Vendor specific)
  */
 export const getInquiries = async (): Promise<Inquiry[]> => {
     if (!supabase) return [];
@@ -170,10 +212,22 @@ export const getInquiries = async (): Promise<Inquiry[]> => {
         const { data, error } = await supabase
             .from(INQUIRIES_TABLE)
             .select('*')
-            .order('createdAt', { ascending: false });
+            .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as Inquiry[];
+        
+        // Map back to camelCase
+        return data.map((i: any) => ({
+            id: i.id,
+            vendorId: i.vendor_id,
+            vendorName: i.vendor_name,
+            userName: i.user_name,
+            contact: i.contact,
+            date: i.date,
+            guestCount: i.guest_count,
+            status: i.status,
+            createdAt: i.created_at
+        })) as Inquiry[];
     } catch (error) {
         console.error("Error getting inquiries:", error);
         return [];
@@ -201,9 +255,17 @@ export const updateInquiryStatus = async (id: string, status: 'new' | 'read' | '
 export const getSiteContent = async () => {
   if (!supabase) return null;
   try {
-    const { data, error } = await supabase.from(SETTINGS_TABLE).select('*').eq('id', 'homepage').single();
+    const { data, error } = await supabase.from(SETTINGS_TABLE).select('*').eq('id', 'homepage').maybeSingle();
     if (error) return null;
-    return data;
+    if (!data) return null;
+    
+    // Map snake_case to camelCase for app consumption
+    return {
+        heroTitle: data.hero_title,
+        heroSubtitle: data.hero_subtitle,
+        heroImage: data.hero_image,
+        preheaderText: data.preheader_text
+    };
   } catch (error) {
     console.error("Error fetching site content:", error);
     return null;
@@ -216,8 +278,15 @@ export const getSiteContent = async () => {
 export const updateSiteContent = async (data: any) => {
   if (!supabase) return false;
   try {
-    // Upsert logic
-    const { error } = await supabase.from(SETTINGS_TABLE).upsert({ id: 'homepage', ...data });
+    const dbPayload = {
+        id: 'homepage',
+        hero_title: data.heroTitle,
+        hero_subtitle: data.heroSubtitle,
+        hero_image: data.heroImage,
+        preheader_text: data.preheaderText
+    };
+
+    const { error } = await supabase.from(SETTINGS_TABLE).upsert(dbPayload);
     if (error) throw error;
     return true;
   } catch (error) {
@@ -233,14 +302,24 @@ export const seedDatabase = async () => {
     if (!supabase) return;
     
     console.log("Starting database seed...");
-    let count = 0;
     
-    // We can filter out IDs that might conflict or let Supabase generate them if we modify the type
-    // Here we assume standard insert
-    
-    // Chunking to avoid payload limit if array is huge (it's small now)
     try {
-        const { error } = await supabase.from(VENDORS_TABLE).insert(localVendors);
+        const mappedVendors = localVendors.map((v, i) => ({
+            ...v,
+            // Ensure valid ID for DB
+            id: v.id.length > 5 ? v.id : `seed-${i}-${v.slug}`,
+            owner_id: v.ownerId,
+            // Add required default fields if missing
+            venue_type: (v as any).venue_type || null,
+            service_type: (v as any).service_type || null,
+            product_type: (v as any).product_type || null,
+            created_at: new Date().toISOString()
+        }));
+
+        // Remove ownerId from object to prevent column error
+        const cleaned = mappedVendors.map(({ownerId, ...rest}: any) => rest);
+
+        const { error } = await supabase.from(VENDORS_TABLE).upsert(cleaned);
         if (error) {
             console.error("Seed error:", error);
         } else {

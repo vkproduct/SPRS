@@ -30,19 +30,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // 1. Try to get User Profile
       let profile: UserProfile | null = null;
-      const { data: userDoc } = await supabase.from('users').select('*').eq('uid', uid).single();
+      const { data: userDoc, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       
       if (userDoc) {
-        profile = userDoc as UserProfile;
+        // Map snake_case to CamelCase manually if needed, or rely on loose types if fields match 
+        // (Supabase returns snake_case, our interface expects camelCase for multi-word fields)
+        profile = {
+             uid: userDoc.uid,
+             email: userDoc.email,
+             firstName: userDoc.first_name,
+             lastName: userDoc.last_name,
+             phone: userDoc.phone,
+             role: userDoc.role,
+             createdAt: userDoc.created_at,
+             eventDate: userDoc.event_date,
+             eventType: userDoc.event_type,
+             guestCount: userDoc.guest_count,
+             preferences: userDoc.preferences
+        } as UserProfile;
       }
 
-      // 2. Try to get Vendor Profile (if contractor)
+      // 2. Try to get Vendor Profile (if contractor or if profile missing but might be legacy)
       let vendor: Vendor | null = null;
       if (profile?.role === 'contractor' || !profile) {
-        const { data: vDoc } = await supabase.from('vendors').select('*').eq('ownerId', uid).single();
+        const { data: vDoc } = await supabase.from('vendors').select('*').eq('owner_id', uid).maybeSingle();
         
         if (vDoc) {
-            vendor = vDoc as Vendor;
+            vendor = { ...vDoc, ownerId: vDoc.owner_id } as Vendor;
             
             // Backfill profile if missing (Legacy support)
             if (!profile) {
