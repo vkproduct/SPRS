@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Categories } from './components/Categories';
 import { AiPlanner } from './components/AiPlanner';
+import { AiAdvisor } from './components/AiAdvisor';
 import { LeadForm } from './components/LeadForm';
 import { Footer } from './components/Footer';
 import { ForPartners } from './components/ForPartners';
@@ -164,6 +165,7 @@ function MainContent() {
                 imageUrl={cmsContent?.heroImage}      
             />
             <Categories onCategoryClick={handleCategoryClick} />
+            <AiAdvisor />
             <AiPlanner />
             <LeadForm />
           </>

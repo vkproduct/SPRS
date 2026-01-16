@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Sparkles } from 'lucide-react';
 
 interface HeroProps {
   title?: string;
@@ -18,6 +18,13 @@ export const Hero: React.FC<HeroProps> = ({
     const categoriesSection = document.getElementById('kategorije');
     if (categoriesSection) {
         categoriesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollToAi = () => {
+    const aiSection = document.getElementById('ai-savetnik');
+    if (aiSection) {
+        aiSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -72,12 +79,24 @@ export const Hero: React.FC<HeroProps> = ({
             <h2 className="hero__subtitle text-lg font-medium mb-8 max-w-2xl text-gray-100">
               {subtitle}
             </h2>
-            <button 
-                onClick={handleScrollToExplore}
-                className="hero__cta bg-white text-portal-dark hover:bg-gray-100 font-bold px-8 py-4 rounded-full transition-colors w-fit shadow-md"
-            >
-              Istraži ponudu prostora
-            </button>
+            
+            {/* Buttons Container */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                    onClick={handleScrollToExplore}
+                    className="hero__cta bg-white text-portal-dark hover:bg-gray-100 font-bold px-8 py-4 rounded-full transition-colors w-fit shadow-md"
+                >
+                  Istraži ponudu prostora
+                </button>
+
+                <button 
+                    onClick={handleScrollToAi}
+                    className="hero__cta-ai bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30 font-bold px-8 py-4 rounded-full transition-colors w-fit shadow-md flex items-center gap-2"
+                >
+                  <Sparkles size={18} /> Probaj AI Savetnika
+                </button>
+            </div>
+
           </div>
         </div>
 
