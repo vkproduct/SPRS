@@ -1,14 +1,26 @@
+
 import React, { useState } from 'react';
+import { submitPartnerLead } from '../services/vendorService';
 
 export const LeadForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTimeout(() => {
-      setSubmitted(true);
-    }, 800);
+    if (!email) return;
+
+    setLoading(true);
+    const success = await submitPartnerLead(email);
+    setLoading(false);
+
+    if (success) {
+        setSubmitted(true);
+        setEmail('');
+    } else {
+        alert("Došlo je do greške. Pokušajte ponovo.");
+    }
   };
 
   return (
@@ -40,22 +52,25 @@ export const LeadForm: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ime@kompanija.com"
-                  className="lead-form__input p-4 border border-gray-300 rounded-lg outline-none focus:border-portal-dark focus:ring-1 focus:ring-portal-dark transition-all"
+                  disabled={loading}
+                  className="lead-form__input p-4 border border-gray-300 rounded-lg outline-none focus:border-portal-dark focus:ring-1 focus:ring-portal-dark transition-all disabled:bg-gray-100"
                 />
               </div>
               
               <button 
                 type="submit"
-                className="lead-form__submit bg-gradient-to-r from-[#E61E4D] to-[#D80565] text-white py-4 rounded-lg font-bold text-lg hover:opacity-95 transition-opacity mt-2"
+                disabled={loading}
+                className="lead-form__submit bg-gradient-to-r from-[#E61E4D] to-[#D80565] text-white py-4 rounded-lg font-bold text-lg hover:opacity-95 transition-opacity mt-2 flex items-center justify-center"
               >
-                Počnite
+                {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Počnite besplatno'}
               </button>
             </form>
           ) : (
-            <div className="lead-form__success py-10 text-center">
+            <div className="lead-form__success py-10 text-center animate-fade-in">
               <div className="lead-form__success-icon text-primary text-5xl mb-4">✓</div>
               <h3 className="lead-form__success-title text-2xl font-bold mb-2">Hvala vam!</h3>
-              <p className="lead-form__success-text text-gray-500">Kontaktiraćemo vas uskoro sa detaljima za partnere.</p>
+              <p className="lead-form__success-text text-gray-500 mb-4">Vaša prijava je primljena. Naš tim će vas kontaktirati uskoro.</p>
+              <button onClick={() => setSubmitted(false)} className="text-sm text-primary font-bold hover:underline">Pošalji još jedan</button>
             </div>
           )}
         </div>

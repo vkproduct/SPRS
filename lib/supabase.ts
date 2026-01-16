@@ -2,21 +2,21 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Access env safely to prevent crash if import.meta.env is undefined
-const env = (import.meta as any).env;
-const supabaseUrl = env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY;
+// We trim() values to avoid issues if you accidentally copy a space in Vercel dashboard
+const env = (import.meta as any).env || {};
+const supabaseUrl = env.VITE_SUPABASE_URL ? String(env.VITE_SUPABASE_URL).trim() : '';
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY ? String(env.VITE_SUPABASE_ANON_KEY).trim() : '';
 
 // Use 'any' schema to allow any table/row operations without strict validation errors.
-// This resolves TS2769 errors where tables are inferred as 'never' type.
 export type Database = any;
 
 let supabase: SupabaseClient<any, "public", any> | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {
-    // We do not pass a generic to createClient, letting it default to 'any' schema
     supabase = createClient(supabaseUrl, supabaseAnonKey);
 } else {
-    console.warn("Supabase credentials missing. Using local mock data.");
+    // Only warn in development, or if explicitly missing in prod
+    console.warn("Supabase credentials missing. App running in mock mode.");
 }
 
 export { supabase };

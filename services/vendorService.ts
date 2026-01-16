@@ -204,6 +204,33 @@ export const submitInquiry = async (data: {
 };
 
 /**
+ * Captures a Partner Lead from the Landing Page
+ */
+export const submitPartnerLead = async (email: string) => {
+    if (!supabase) return true; // Mock success
+    try {
+        // Reuse inquiries table but mark as system lead
+        const payload = {
+            vendor_id: 'partner-lead-gen',
+            vendor_name: 'Platform Partner Lead',
+            user_name: 'Novi Partner',
+            contact: email,
+            date: new Date().toISOString().split('T')[0],
+            guest_count: 0,
+            status: 'new',
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase.from(INQUIRIES_TABLE).insert(payload);
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error("Error submitting lead:", error);
+        return false;
+    }
+};
+
+/**
  * Get all inquiries (Admin / Vendor specific)
  */
 export const getInquiries = async (): Promise<Inquiry[]> => {

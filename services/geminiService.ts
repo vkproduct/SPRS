@@ -1,20 +1,14 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 const getClient = () => {
-  let apiKey;
-  
-  // Safe check for process.env (Node/Webpack)
-  if (typeof process !== 'undefined' && process.env) {
-      apiKey = process.env.API_KEY || process.env.REACT_APP_API_KEY || process.env.VITE_API_KEY;
-  }
-  
-  // Safe check for import.meta.env (Vite)
-  if (!apiKey && (import.meta as any).env) {
-      apiKey = (import.meta as any).env.VITE_API_KEY;
-  }
+  // In Vite/Vercel, we prioritize import.meta.env
+  // We trim() to ensure no spaces from copy-pasting causing errors
+  const env = (import.meta as any).env || {};
+  const apiKey = env.VITE_API_KEY ? String(env.VITE_API_KEY).trim() : '';
 
   if (!apiKey) {
-    console.error("CRITICAL: API_KEY is missing. Please create a .env file based on .env.example");
+    console.error("CRITICAL: API_KEY is missing. Please check Vercel Environment Variables or .env file.");
     return null;
   }
   
@@ -23,11 +17,11 @@ const getClient = () => {
 
 export const generateWeddingAdvice = async (userPrompt: string): Promise<string> => {
   const client = getClient();
-  if (!client) return "Konfiguracija nije pronađena. Molimo proverite API ključ u .env fajlu.";
+  if (!client) return "Konfiguracija nije pronađena. Molimo proverite API ključ.";
 
   try {
     const response = await client.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash-exp', // Updated to latest available fast model or keep 'gemini-1.5-flash'
       contents: userPrompt,
       config: {
         systemInstruction: `Vi ste SveZaProslavu AI, stručni konsultant za organizaciju događaja u Srbiji. 
