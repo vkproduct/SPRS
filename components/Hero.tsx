@@ -14,10 +14,10 @@ export const Hero: React.FC<HeroProps> = ({
   imageUrl
 }) => {
   
-  // Robust fallback: Uses provided URL, or falls back to a stable high-quality wedding image if null/empty
+  // Robust fallback: Uses provided URL, or falls back to the preferred festive image
   const displayImage = imageUrl && imageUrl.trim() !== '' 
     ? imageUrl 
-    : "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
+    : "https://images.unsplash.com/photo-1688493904228-f6bd305c542d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   const handleScrollToExplore = () => {
     const categoriesSection = document.getElementById('kategorije');
