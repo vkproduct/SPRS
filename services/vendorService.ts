@@ -207,13 +207,15 @@ export const submitInquiry = async (data: {
  * Captures a Partner Lead from the Landing Page
  */
 export const submitPartnerLead = async (email: string) => {
-    if (!supabase) return true; // Mock success
+    if (!supabase) return true; // Mock success if not connected
+    
     try {
-        // Reuse inquiries table but mark as system lead
+        // We use 'null' for vendor_id to avoid Foreign Key constraint violations
+        // We tag it as 'LANDING_PAGE_LEAD' in the vendor_name field for Admin tracking
         const payload = {
-            vendor_id: 'partner-lead-gen',
-            vendor_name: 'Platform Partner Lead',
-            user_name: 'Novi Partner',
+            vendor_id: null, 
+            vendor_name: 'LANDING_PAGE_LEAD',
+            user_name: 'Novi Partner (Rani Pristup)',
             contact: email,
             date: new Date().toISOString().split('T')[0],
             guest_count: 0,
