@@ -1,27 +1,22 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const getClient = () => {
-  // In Vite/Vercel, we prioritize import.meta.env
-  // We trim() to ensure no spaces from copy-pasting causing errors
-  const env = (import.meta as any).env || {};
-  const apiKey = env.VITE_API_KEY ? String(env.VITE_API_KEY).trim() : '';
+export const generateWeddingAdvice = async (userPrompt: string): Promise<string> => {
+  // We use process.env.API_KEY as required by strict SDK guidelines.
+  // This is polyfilled in vite.config.ts using VITE_API_KEY.
+  const apiKey = process.env.API_KEY;
 
   if (!apiKey) {
-    console.error("CRITICAL: API_KEY is missing. Please check Vercel Environment Variables or .env file.");
-    return null;
+    console.error("CRITICAL: API_KEY is missing. Please ensure VITE_API_KEY is added to Vercel Environment Variables.");
+    return "Sistem za savete trenutno nije dostupan (nedostaje konfiguracija). Molimo pokušajte kasnije.";
   }
-  
-  return new GoogleGenAI({ apiKey });
-};
-
-export const generateWeddingAdvice = async (userPrompt: string): Promise<string> => {
-  const client = getClient();
-  if (!client) return "Konfiguracija nije pronađena. Molimo proverite API ključ.";
 
   try {
-    const response = await client.models.generateContent({
-      model: 'gemini-2.0-flash-exp', // Updated to latest available fast model or keep 'gemini-1.5-flash'
+    const ai = new GoogleGenAI({ apiKey });
+    
+    // Using the recommended model for basic text tasks
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview', 
       contents: userPrompt,
       config: {
         systemInstruction: `Vi ste SveZaProslavu AI, stručni konsultant za organizaciju događaja u Srbiji. 
