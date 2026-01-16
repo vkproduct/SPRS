@@ -19,11 +19,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNav
   const [successMessage, setSuccessMessage] = useState({ title: '', text: '', btnText: '', target: '' });
 
   const handleLoginSuccess = (role: string) => {
-    // Redirect logic
+    // Redirect logic based on role
     if (role === 'contractor' || role === 'admin') {
         onNavigate('partner-dashboard');
     } else {
-        onNavigate('venues'); // Or 'home'
+        // Regular users go to home or venues to start browsing
+        onNavigate('home');
     }
   };
 

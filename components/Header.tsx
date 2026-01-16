@@ -64,12 +64,30 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     if (onNavigate) onNavigate('goods-categories');
   };
 
+  // Logic for the "Moj Biznis" / "Partneri" button
   const handlePartnerLogin = () => {
-      if (currentUser && onNavigate) {
+      if (!onNavigate) return;
+      
+      if (currentUser?.role === 'contractor' || currentUser?.role === 'admin') {
           onNavigate('partner-dashboard');
-      } else if (onNavigate) {
-          // If not logged in, go to the landing page first so they see benefits
+      } else {
+          // If logged out or regular user, go to partner landing page
           onNavigate('partners');
+      }
+  };
+
+  // Logic for the User Menu (Avatar)
+  const handleUserMenuClick = () => {
+      if (!onNavigate) return;
+
+      if (!currentUser) {
+          onNavigate('login');
+      } else if (currentUser.role === 'admin') {
+          onNavigate('admin-panel');
+      } else {
+          // Both contractors and regular users go here
+          // The PartnerDashboard component handles the view differentiation
+          onNavigate('partner-dashboard');
       }
   };
 
@@ -134,17 +152,22 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
                 onClick={handlePartnerLogin}
                 className="hidden md:flex items-center gap-2 font-medium text-sm hover:bg-gray-100 px-4 py-2 rounded-full cursor-pointer transition-all border border-gray-200"
             >
-                <Briefcase size={16} /> {currentUser ? 'Moj Biznis' : 'Partneri'}
+                <Briefcase size={16} /> 
+                {currentUser?.role === 'contractor' ? 'Moj Biznis' : 'Partneri'}
             </button>
             
             {/* User Menu Pill */}
             <div 
-                onClick={() => onNavigate && onNavigate(currentUser ? 'partner-dashboard' : 'login')}
+                onClick={handleUserMenuClick}
                 className="header__user-menu flex items-center gap-2 border border-gray-300 rounded-full p-1 pl-3 hover:shadow-md cursor-pointer transition-shadow ml-1"
+                title={currentUser ? `Prijavljeni ste kao: ${currentUser.firstName}` : 'Prijavite se'}
             >
               <Menu size={18} className="text-gray-600" />
-              <div className="header__user-avatar bg-gray-500 text-white p-1 rounded-full">
+              <div className="header__user-avatar bg-gray-500 text-white p-1 rounded-full relative">
                  <UserIcon size={18} fill="currentColor" className="text-white" />
+                 {currentUser && (
+                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                 )}
               </div>
             </div>
           </div>
