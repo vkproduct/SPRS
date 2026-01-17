@@ -12,7 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home', customPreheader }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const { currentUser } = useAuth(); 
 
   useEffect(() => {
@@ -21,17 +21,21 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Set target date 30 days from now
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 30);
+    // Set fixed target date to February 15, 2026
+    let targetDate = new Date('2026-02-15T00:00:00');
+    
+    // Fallback: If date passed, reset to +30 days (for demo continuity)
+    if (targetDate.getTime() < new Date().getTime()) {
+        targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 30);
+    }
 
-    const interval = setInterval(() => {
+    const calculateTimeLeft = () => {
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
 
       if (difference <= 0) {
-        clearInterval(interval);
-        return;
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       }
 
       const days = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -39,7 +43,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
       const minutes = Math.floor((difference / 1000 / 60) % 60);
       const seconds = Math.floor((difference / 1000) % 60);
 
-      setTimeLeft({ days, hours, minutes, seconds });
+      return { days, hours, minutes, seconds };
+    };
+
+    // Update immediately, then every second
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => {
@@ -86,19 +96,28 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
       className={`header fixed w-full z-50 transition-all duration-300 bg-white border-b border-gray-100 flex flex-col`}
     >
       {/* Preheader Countdown */}
-      <div className="header__preheader bg-portal-dark text-white text-xs md:text-sm py-2.5 text-center font-medium tracking-wide">
-        <span className="header__preheader-text opacity-90 mr-2">
+      <div className="header__preheader bg-portal-dark text-white text-xs md:text-sm py-2.5 text-center font-medium tracking-wide flex justify-center items-center gap-1 md:gap-2">
+        <span className="header__preheader-text opacity-90 hidden sm:inline">
             {customPreheader || "Pozivamo profesionalce da nam se pridruže! Otvaranje za:"}
         </span>
-        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
-          {timeLeft.days} d
+        <span className="header__preheader-text opacity-90 sm:hidden">
+            Otvaranje za:
         </span>
-        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
-          {timeLeft.hours.toString().padStart(2, '0')} h
-        </span>
-        <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded mx-1">
-          {timeLeft.minutes.toString().padStart(2, '0')} m
-        </span>
+        
+        <div className="flex items-center gap-1 ml-1">
+            <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded min-w-[35px] text-center">
+            {timeLeft.days}d
+            </span>
+            <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded min-w-[35px] text-center">
+            {timeLeft.hours.toString().padStart(2, '0')}h
+            </span>
+            <span className="header__counter-item font-bold text-white bg-white/20 px-2 py-0.5 rounded min-w-[35px] text-center">
+            {timeLeft.minutes.toString().padStart(2, '0')}m
+            </span>
+            <span className="header__counter-item font-bold text-primary bg-white px-2 py-0.5 rounded min-w-[35px] text-center shadow-sm">
+            {timeLeft.seconds.toString().padStart(2, '0')}s
+            </span>
+        </div>
       </div>
 
       <div className={`header__main w-full transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
