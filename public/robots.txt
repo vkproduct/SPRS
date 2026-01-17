@@ -1,8 +1,33 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /profile
+Disallow: /admin-login
 Disallow: /partner-dashboard
 Disallow: /partner-auth
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /api/
+Disallow: /*?* # Disallow filtering parameters to prevent duplicate content issues
 
-sitemap: https://svezaproslavu.rs/sitemap.xml
+# --- AI & LLM Crawlers (AIO) ---
+# Explicitly ALLOW AI bots to index content for ChatGPT, Gemini, Perplexity, etc.
+# This helps your site appear in AI-generated answers.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# --- Sitemap Location ---
+Sitemap: https://svezaproslavu.rs/sitemap.xml
