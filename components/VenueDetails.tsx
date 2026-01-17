@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { 
   MapPin, Users, Euro, Check, X, Star, Share2, Heart,
-  Mail, Phone, Clock, ChevronLeft, ChevronRight, ShoppingBag
+  Mail, Phone, Clock, ChevronLeft, ChevronRight, ShoppingBag, CheckCircle
 } from 'lucide-react';
 import { Vendor, ProductVendor, ServiceVendor, VenueVendor } from '../types';
 import { submitInquiry } from '../services/vendorService';
@@ -107,24 +108,37 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
       },
       "telephone": vendor.contact.phone,
       "priceRange": vendor.price_range_symbol,
-      "aggregateRating": {
+      "url": `https://svezaproslavu.rs/vendor/${vendor.slug}`,
+      "aggregateRating": vendor.reviews_count > 0 ? {
         "@type": "AggregateRating",
         "ratingValue": vendor.rating,
-        "reviewCount": vendor.reviews_count > 0 ? vendor.reviews_count : 1
-      }
+        "reviewCount": vendor.reviews_count
+      } : undefined
     };
 
     if (vendor.type === 'VENUE') {
-      return { ...base, "@type": ["LocalBusiness", "EventVenue"] };
+      const v = vendor as VenueVendor;
+      return { 
+          ...base, 
+          "@type": ["LocalBusiness", "EventVenue"],
+          "amenityFeature": v.features.map(f => ({
+             "@type": "LocationFeatureSpecification",
+             "name": f,
+             "value": true
+          })),
+          "maximumAttendeeCapacity": v.capacity.max
+      };
     } else if (vendor.type === 'PRODUCT') {
+      const p = vendor as ProductVendor;
       return { 
           ...base, 
           "@type": "Product",
           "offers": {
              "@type": "Offer",
-             "price": vendor.pricing.buy_price_from || vendor.pricing.rent_price_from,
+             "price": p.pricing.buy_price_from || p.pricing.rent_price_from,
              "priceCurrency": "EUR",
-             "availability": "https://schema.org/InStock"
+             "availability": "https://schema.org/InStock",
+             "url": `https://svezaproslavu.rs/vendor/${vendor.slug}`
           }
       };
     } else {
@@ -319,6 +333,3 @@ export const VenueDetails: React.FC<VenueDetailsProps> = ({ venue: vendor, onBac
     </article>
   );
 };
-
-// Helper for check icon
-const CheckCircle = ({className, size}: any) => (<div className={className}><Check size={size} /></div>);

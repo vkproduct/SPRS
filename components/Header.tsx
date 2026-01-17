@@ -48,24 +48,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
     };
   }, []);
 
-  const handleLogoClick = () => {
-    if (onNavigate) onNavigate('home');
-  };
-  
-  const handleVenuesClick = () => {
-    if (onNavigate) onNavigate('venues');
-  };
-
-  const handleServicesClick = () => {
-    if (onNavigate) onNavigate('services');
-  };
-
-  const handleProductsClick = () => {
-    if (onNavigate) onNavigate('goods-categories');
+  const handleNavClick = (e: React.MouseEvent, view: ViewType) => {
+    e.preventDefault();
+    if (onNavigate) onNavigate(view);
   };
 
   // Logic for the "Moj Biznis" / "Partneri" button
-  const handlePartnerLogin = () => {
+  const handlePartnerLogin = (e: React.MouseEvent) => {
+      e.preventDefault();
       if (!onNavigate) return;
       
       if (currentUser?.role === 'contractor' || currentUser?.role === 'admin') {
@@ -114,47 +104,51 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'home'
       <div className={`header__main w-full transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
         <div className="header__container container mx-auto px-6 md:px-12 flex justify-between items-center">
           {/* Logo - Typographic Wordmark in Brand Color */}
-          <div onClick={handleLogoClick} className="header__logo flex items-center flex-1 cursor-pointer group select-none">
+          <a href="/" onClick={(e) => handleNavClick(e, 'home')} className="header__logo flex items-center flex-1 cursor-pointer group select-none decoration-transparent">
             <div className="flex items-baseline transition-opacity hover:opacity-80">
                 <span className="font-poppins font-semibold text-xl md:text-xl tracking-tight text-primary uppercase">
                   SveZaProslavu
                 </span>
                 <span className="font-poppins text-primary/60 font-semibold text-lg md:text-xl tracking-tight ml-0.5">.rs</span>
             </div>
-          </div>
+          </a>
 
           {/* Center Nav */}
-          <div className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
-            <button 
-              onClick={handleVenuesClick}
+          <nav className={`header__nav hidden md:flex gap-6 items-center transition-all`}>
+            <a 
+              href="/venues"
+              onClick={(e) => handleNavClick(e, 'venues')}
               className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'venues' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
             >
               Prostori
-            </button>
-            <button 
-              onClick={handleServicesClick}
+            </a>
+            <a 
+              href="/services"
+              onClick={(e) => handleNavClick(e, 'services')}
               className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'services' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
             >
               Usluge
-            </button>
-            <button 
-              onClick={handleProductsClick}
+            </a>
+            <a 
+              href="/goods"
+              onClick={(e) => handleNavClick(e, 'goods-categories')}
               className={`header__nav-link font-medium px-4 py-2 text-sm rounded-full transition-all ${currentView === 'goods-categories' || currentView === 'goods-list' ? 'bg-gray-100 text-portal-dark' : 'text-gray-500 hover:bg-gray-100 hover:text-portal-dark'}`}
             >
               Proizvodi
-            </button>
-          </div>
+            </a>
+          </nav>
 
           {/* Right Actions */}
           <div className="header__actions flex-1 flex justify-end items-center gap-2">
             
-            <button 
+            <a 
+                href="/partners"
                 onClick={handlePartnerLogin}
-                className="hidden md:flex items-center gap-2 font-medium text-sm hover:bg-gray-100 px-4 py-2 rounded-full cursor-pointer transition-all border border-gray-200"
+                className="hidden md:flex items-center gap-2 font-medium text-sm hover:bg-gray-100 px-4 py-2 rounded-full cursor-pointer transition-all border border-gray-200 text-portal-dark"
             >
                 <Briefcase size={16} /> 
                 {currentUser?.role === 'contractor' ? 'Moj Biznis' : 'Partneri'}
-            </button>
+            </a>
             
             {/* User Menu Pill */}
             <div 

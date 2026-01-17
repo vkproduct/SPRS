@@ -31,9 +31,10 @@ export const GoodsCategories: React.FC<GoodsCategoriesProps> = ({ onCategoryClic
             
             {/* Featured Item - Wedding Dresses (First item spans 2 rows on large screens if needed, keeping simple grid for now) */}
             {productSubcategories.map((cat, index) => (
-                <div 
+                <a 
                     key={cat.id}
-                    onClick={() => onCategoryClick(cat.id)}
+                    href={`/goods/${cat.id.toLowerCase()}`} // SEO Friendly URL
+                    onClick={(e) => { e.preventDefault(); onCategoryClick(cat.id); }}
                     className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 ${index === 0 ? 'md:col-span-2 md:row-span-2 h-[400px] md:h-[500px]' : 'h-[240px]'}`}
                 >
                     <div className="absolute inset-0 bg-gray-200">
@@ -57,7 +58,7 @@ export const GoodsCategories: React.FC<GoodsCategoriesProps> = ({ onCategoryClic
                             <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
                         </div>
                     </div>
-                </div>
+                </a>
             ))}
         </div>
 

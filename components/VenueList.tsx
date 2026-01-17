@@ -160,6 +160,11 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent, vendor: Vendor) => {
+    e.preventDefault();
+    if (onVenueSelect) onVenueSelect(vendor);
+  };
+
   return (
     <div className="pt-36 pb-20 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 md:px-8">
@@ -314,10 +319,11 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredVendors.map((vendor) => (
-                    <div 
-                    key={vendor.id} 
-                    className="bg-white rounded-xl shadow-sm hover:shadow-floating transition-all duration-300 group overflow-hidden border border-transparent hover:border-gray-100 flex flex-col h-full cursor-pointer"
-                    onClick={() => onVenueSelect && onVenueSelect(vendor)}
+                    <a 
+                      key={vendor.id} 
+                      href={`/vendor/${vendor.slug}`}
+                      className="bg-white rounded-xl shadow-sm hover:shadow-floating transition-all duration-300 group overflow-hidden border border-transparent hover:border-gray-100 flex flex-col h-full cursor-pointer decoration-transparent"
+                      onClick={(e) => handleCardClick(e, vendor)}
                     >
                     
                     {/* Image Area */}
@@ -387,13 +393,13 @@ export const VenueList: React.FC<VenueListProps> = ({ onVenueSelect, initialCate
                         )}
                         </div>
 
-                        <button 
+                        <div 
                         className="w-full mt-2 py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-portal-dark hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
                         >
                         Pogledaj detalje <ArrowUpRight size={16} />
-                        </button>
+                        </div>
                     </div>
-                    </div>
+                    </a>
                 ))}
                 </div>
             )}
