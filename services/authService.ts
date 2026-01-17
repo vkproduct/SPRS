@@ -126,6 +126,11 @@ export const registerContractor = async (
   // Use a reliable ID that can be derived or is unique
   const newVendorId = `partner-${authData.user.id.slice(0, 8)}`;
   
+  // Prepare default pricing to ensure DB validity or UI safety
+  const defaultPricing = vendorData.type === 'VENUE' 
+    ? { per_person_from: 0 } 
+    : { package_from: 0 };
+
   // Mapping to DB Columns
   const vendorPayload: any = {
     id: newVendorId,
@@ -135,8 +140,8 @@ export const registerContractor = async (
     type: vendorData.type || 'VENUE', 
     category_id: vendorData.category_id || '1',
     slug: (vendorData.venueName || vendorData.companyName).toLowerCase().replace(/[^a-z0-9]/g, '-'),
-    city: vendorData.city,
-    address: vendorData.address,
+    city: vendorData.city || 'Srbija',
+    address: vendorData.address || 'Online',
     description: vendorData.description,
     cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80', // Default
     gallery: [],
@@ -148,10 +153,10 @@ export const registerContractor = async (
       email: loginData.email,
       phone: vendorData.phone
     },
-    pricing: {},
+    pricing: defaultPricing,
     ...(vendorData.type === 'VENUE' ? {
         venue_type: vendorData.venueType || 'Restoran',
-        capacity: { min: 0, max: vendorData.capacity || 100, seated: vendorData.capacity, cocktail: vendorData.capacity }
+        capacity: { min: 0, max: vendorData.capacity || 100, seated: vendorData.capacity || 100, cocktail: vendorData.capacity || 100 }
     } : {
         service_type: 'Usluga'
     })

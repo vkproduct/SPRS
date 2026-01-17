@@ -42,6 +42,8 @@ export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ 
     const newErrors: Record<string, string> = {};
     if (!formData.venueName) newErrors.venueName = "Obavezno polje";
     if (!formData.contactFirstName) newErrors.contactFirstName = "Obavezno polje";
+    if (!formData.city) newErrors.city = "Obavezno polje";
+    if (!formData.address) newErrors.address = "Obavezno polje";
     if (!formData.email || !validateEmail(formData.email)) newErrors.email = "Neispravan email";
     if (!formData.phone || !validatePhoneRS(formData.phone)) newErrors.phone = "Neispravan format";
     if (formData.password.length < 8) newErrors.password = "Min. 8 karaktera";
@@ -59,17 +61,25 @@ export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ 
     setError('');
 
     try {
+        const capacityInt = formData.capacity ? parseInt(formData.capacity) : 0;
+        
         await registerContractor(
             { email: formData.email, password: formData.password },
-            { ...formData, capacity: formData.capacity ? parseInt(formData.capacity) : 0 }
+            { 
+              ...formData, 
+              capacity: isNaN(capacityInt) ? 0 : capacityInt 
+            }
         );
         onSuccess();
     } catch (err: any) {
-        console.error(err);
+        console.error("Registration error:", err);
         if (err.code === 'auth/email-already-in-use') {
             setError("Nalog sa ovim email-om već postoji.");
+        } else if (err.message) {
+            // Show specific Supabase error if available
+            setError(`Greška: ${err.message}`);
         } else {
-            setError("Došlo je do greške. Pokušajte ponovo.");
+            setError("Došlo je do nepoznate greške. Pokušajte ponovo.");
         }
     } finally {
         setLoading(false);
@@ -85,7 +95,7 @@ export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ 
         <h2 className="text-xl font-bold text-portal-dark">Biznis Registracija</h2>
       </div>
 
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 text-center">{error}</div>}
+      {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 text-center break-words">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         
@@ -114,8 +124,8 @@ export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ 
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                 <InputField label="Grad" name="city" value={formData.city} onChange={handleChange} />
-                 <InputField label="Adresa" name="address" value={formData.address} onChange={handleChange} />
+                 <InputField label="Grad" name="city" required value={formData.city} onChange={handleChange} error={errors.city} />
+                 <InputField label="Adresa" name="address" required value={formData.address} onChange={handleChange} error={errors.address} />
             </div>
 
             {formData.type === 'VENUE' && (
