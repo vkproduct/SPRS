@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { InputField, AuthButton } from './SharedComponents';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
-import { loginUnified } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 
 interface LoginFormProps {
   onSuccess: (role: string) => void;
@@ -10,6 +10,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick }) => {
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -23,7 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick
     setError('');
 
     try {
-        const profile = await loginUnified(email, password);
+        const profile = await login(email, password);
         
         if (rememberMe) {
             localStorage.setItem('svezaproslavu_remember', email);

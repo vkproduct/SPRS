@@ -7,6 +7,7 @@ import {
 import { getVendors, deleteVendor, getInquiries, updateInquiryStatus, getSiteContent, updateSiteContent } from '../services/vendorService';
 import { Vendor, Inquiry } from '../types';
 import { AdminAddVendor } from './AdminAddVendor';
+import { useAuth } from '../context/AuthContext';
 
 // ------------------------------------------------------------------
 // 1. MEMOIZED SUB-COMPONENTS
@@ -294,6 +295,7 @@ interface AdminPanelProps {
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
+  const { logout } = useAuth();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [stats, setStats] = useState({ venues: 0, inquiries: 0, unread: 0 });
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -328,6 +330,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
   // Load Data on Mount
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleLogout = async () => {
+      await logout();
+      onLogout();
+  };
 
   // 2. Memoized Handlers
   const handleEditVendor = useCallback((vendor: Vendor) => {
@@ -375,7 +382,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <AdminSidebar currentView={currentView} onChangeView={setCurrentView} onLogout={onLogout} />
+      <AdminSidebar currentView={currentView} onChangeView={setCurrentView} onLogout={handleLogout} />
       <main className="ml-64 min-h-screen">
         {loading && vendors.length === 0 ? <div className="p-8">Loading data...</div> : renderView()}
       </main>

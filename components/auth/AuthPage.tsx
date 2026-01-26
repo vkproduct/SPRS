@@ -20,11 +20,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNav
 
   const handleLoginSuccess = (role: string) => {
     // Redirect logic based on role
-    if (role === 'contractor' || role === 'admin') {
-        onNavigate('partner-dashboard');
+    if (role === 'admin') {
+        onNavigate('admin-panel');
     } else {
-        // Regular users go to home or venues to start browsing
-        onNavigate('home');
+        // Both 'contractor' and 'user' go to 'partner-dashboard'.
+        // App.tsx handles the conditional rendering (PartnerDashboard vs UserDashboard) based on role.
+        onNavigate('partner-dashboard');
     }
   };
 
@@ -32,10 +33,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNav
       setSuccessMessage({
           title: 'Uspešna registracija!',
           text: role === 'user' 
-            ? 'Vaš nalog je kreiran. Sada možete da sačuvate omiljene prostore i šaljete upite.'
+            ? 'Vaš nalog je kreiran. Dobrodošli u vaš lični planer.'
             : 'Vaš biznis nalog je kreiran. Dobrodošli u partner mrežu.',
-          btnText: role === 'user' ? 'Pretraži prostore' : 'Idi na Dashboard',
-          target: role === 'user' ? 'venues' : 'partner-dashboard'
+          btnText: 'Idi u Lični Kabinet',
+          target: 'partner-dashboard' // Always go to dashboard
       });
       setView('success');
   };

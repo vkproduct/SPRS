@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Lock, ArrowRight, ShieldCheck, Home, Mail } from 'lucide-react';
-import { loginUnified } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 interface AdminLoginProps {
   onLogin: () => void;
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,8 +20,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     setError('');
 
     try {
-        // Attempt login via Supabase
-        const user = await loginUnified(email, password);
+        const user = await login(email, password);
         
         if (user.role === 'admin') {
             onLogin();

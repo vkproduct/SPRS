@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { InputField, AuthButton } from './SharedComponents';
-import { Mail, Lock, Phone, User, Calendar, Users, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, Phone, Users, ChevronLeft } from 'lucide-react';
 import { validateEmail, validatePhoneRS, registerUser } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 
 interface UserRegistrationProps {
   onBack: () => void;
@@ -10,6 +11,7 @@ interface UserRegistrationProps {
 }
 
 export const UserRegistration: React.FC<UserRegistrationProps> = ({ onBack, onSuccess }) => {
+  const { setProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -65,10 +67,14 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({ onBack, onSu
 
     setLoading(true);
     try {
-        await registerUser({
+        const userProfile = await registerUser({
             ...formData,
             guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined
         });
+        
+        // IMPORTANT: Update Context immediately for Mock Mode / immediate feedback
+        setProfile(userProfile);
+        
         onSuccess();
     } catch (err: any) {
         console.error(err);

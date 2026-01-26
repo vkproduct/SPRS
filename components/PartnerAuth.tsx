@@ -1,14 +1,16 @@
 
-
 import React, { useState } from 'react';
 import { Mail, Lock, Briefcase, FileText, Phone, CheckCircle, ChevronRight } from 'lucide-react';
-import { loginUnified, registerContractor } from '../services/authService';
+import { registerContractor } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
+import { UserProfile } from '../types';
 
 interface PartnerAuthProps {
     onLoginSuccess: () => void;
 }
 
 export const PartnerAuth: React.FC<PartnerAuthProps> = ({ onLoginSuccess }) => {
+    const { login, setProfile } = useAuth();
     const [isRegistering, setIsRegistering] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -32,7 +34,7 @@ export const PartnerAuth: React.FC<PartnerAuthProps> = ({ onLoginSuccess }) => {
 
         try {
             if (isRegistering) {
-                await registerContractor({ email, password }, {
+                const result = await registerContractor({ email, password }, {
                     companyName, 
                     pib, 
                     mb, 
@@ -42,8 +44,9 @@ export const PartnerAuth: React.FC<PartnerAuthProps> = ({ onLoginSuccess }) => {
                     contactFirstName: companyName, // Fallback for name fields
                     contactLastName: ''
                 });
+                setProfile(result.user as UserProfile);
             } else {
-                await loginUnified(email, password);
+                await login(email, password);
             }
             onLoginSuccess();
         } catch (err: any) {

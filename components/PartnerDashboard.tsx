@@ -1,10 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
-import { getMyVendorProfile, logout } from '../services/authService';
+import { getMyVendorProfile } from '../services/authService';
 import { Vendor } from '../types';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, LayoutDashboard, Edit, Save, Eye, MousePointer, Heart, Search } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Edit, Save, Eye, MousePointer } from 'lucide-react';
 import { updateVendor } from '../services/vendorService';
 
 interface PartnerDashboardProps {
@@ -12,7 +11,7 @@ interface PartnerDashboardProps {
 }
 
 export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) => {
-    const { currentUser } = useAuth();
+    const { currentUser, logout } = useAuth();
     const [vendor, setVendor] = useState<Vendor | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -23,21 +22,19 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (!currentUser) return;
-
-            // If User is just a regular user, stop loading (vendor stays null)
-            if (currentUser.role === 'user') {
-                setLoading(false);
+            if (!currentUser) {
+                // If no user is present, stop loading. 
+                // This prevents infinite spinner if accessed directly or via race condition.
+                setLoading(false); 
                 return;
             }
 
-            // If Contractor/Admin, fetch vendor profile
+            // Only fetch for partners/admins
             if (currentUser.role === 'contractor' || currentUser.role === 'admin') {
                 const profile = await getMyVendorProfile(currentUser.uid);
                 setVendor(profile);
                 if (profile) setFormData(profile);
             }
-            
             setLoading(false);
         };
         fetchProfile();
@@ -71,49 +68,15 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
 
     if (loading) return <div className="min-h-screen pt-36 flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
 
-    // --- VIEW FOR REGULAR USERS (NON-VENDORS) ---
-    if (currentUser?.role === 'user' || (currentUser?.role === 'contractor' && !vendor)) {
+    // Safety fallback if accessed without user
+    if (!currentUser) {
         return (
-            <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-portal-dark mb-1">
-                                Zdravo, {currentUser?.firstName || 'Korisniče'}! 👋
-                            </h1>
-                            <p className="text-gray-500">Dobrodošli na vaš lični planer proslava.</p>
-                        </div>
-                        <button onClick={handleLogout} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium">
-                            <LogOut size={18} /> Odjavi se
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="w-12 h-12 bg-red-50 text-primary rounded-full flex items-center justify-center mb-4">
-                                <Heart size={24} />
-                            </div>
-                            <h3 className="font-bold text-lg mb-2">Sačuvani Prostori</h3>
-                            <p className="text-gray-500 text-sm mb-4">Lista vaših omiljenih restorana i usluga.</p>
-                            <button className="text-primary font-bold text-sm hover:underline">Pogledaj listu (Uskoro)</button>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                                <Search size={24} />
-                            </div>
-                            <h3 className="font-bold text-lg mb-2">Moji Upiti</h3>
-                            <p className="text-gray-500 text-sm mb-4">Statusi poslatih upita za proslave.</p>
-                            <button className="text-blue-600 font-bold text-sm hover:underline">Istorija poruka (Uskoro)</button>
-                        </div>
-                    </div>
-                    
-                    {currentUser?.role === 'contractor' && !vendor && (
-                         <div className="mt-8 bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-yellow-800 text-sm">
-                            <span className="font-bold">Napomena:</span> Vaš biznis profil je u pripremi ili čeka odobrenje.
-                         </div>
-                    )}
-                </div>
+            <div className="min-h-screen pt-36 flex flex-col items-center justify-center p-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Pristup nije dozvoljen</h2>
+                <p className="text-gray-500 mb-6">Molimo vas prijavite se ponovo.</p>
+                <button onClick={onLogout} className="bg-primary text-white px-6 py-2 rounded-lg font-bold">
+                    Nazad na početnu
+                </button>
             </div>
         );
     }
@@ -125,8 +88,8 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full top-28 bottom-0 z-10">
                 <div className="p-6 border-b border-gray-100">
-                    <div className="font-bold text-lg text-portal-dark truncate">{vendor?.name}</div>
-                    <div className="text-xs text-gray-500 uppercase">{vendor?.type} • {vendor?.category_id === '1' ? 'Restoran' : 'Usluga'}</div>
+                    <div className="font-bold text-lg text-portal-dark truncate">{vendor?.name || 'Moj Biznis'}</div>
+                    <div className="text-xs text-gray-500 uppercase">{vendor?.type || 'Partner'} • {vendor?.category_id === '1' ? 'Restoran' : 'Usluga'}</div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <button 
@@ -154,9 +117,16 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ onLogout }) 
                 
                 {/* Mobile Header */}
                 <div className="md:hidden flex justify-between items-center mb-8">
-                    <h1 className="text-2xl font-bold truncate">{vendor?.name}</h1>
+                    <h1 className="text-2xl font-bold truncate">{vendor?.name || 'Partner Panel'}</h1>
                     <button onClick={handleLogout} className="p-2 bg-gray-200 rounded-full"><LogOut size={18} /></button>
                 </div>
+
+                {!vendor && (
+                    <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl text-yellow-800 mb-6">
+                        <h3 className="font-bold text-lg mb-2">Profil u pripremi</h3>
+                        <p>Vaš nalog je kreiran. Molimo sačekajte odobrenje administratora ili kontaktirajte podršku ako podaci nisu vidljivi.</p>
+                    </div>
+                )}
 
                 {activeTab === 'overview' && vendor && (
                     <div className="space-y-8 animate-fade-in">

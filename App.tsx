@@ -13,6 +13,7 @@ import { VenueDetails } from './components/VenueDetails';
 import { AdminAddVendor } from './components/AdminAddVendor'; 
 import { AdminLogin } from './components/AdminLogin';
 import { PartnerDashboard } from './components/PartnerDashboard';
+import { UserDashboard } from './components/UserDashboard';
 import { GoodsCategories } from './components/GoodsCategories';
 import { SEOManager } from './components/SEOManager'; 
 import { Vendor } from './types';
@@ -82,7 +83,12 @@ function MainContent() {
     else if (view === 'register') path = '/register';
     else if (view === 'venue-details' && selectedVendor) path = `/vendor/${selectedVendor.slug}`;
     
-    window.history.pushState({}, '', path);
+    try {
+      window.history.pushState({}, '', path);
+    } catch (e) {
+      // Ignore errors in sandboxed environments where history API is restricted
+      console.warn("Navigation state update failed (likely sandbox env):", e);
+    }
 
     if (view !== 'venue-details') {
       setSelectedVendor(null);
@@ -107,7 +113,11 @@ function MainContent() {
   const handleVendorSelect = (vendor: Vendor) => {
     setSelectedVendor(vendor);
     setCurrentView('venue-details');
-    window.history.pushState({}, '', `/vendor/${vendor.slug}`);
+    try {
+      window.history.pushState({}, '', `/vendor/${vendor.slug}`);
+    } catch (e) {
+      console.warn("Navigation state update failed:", e);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -156,7 +166,7 @@ function MainContent() {
           <>
             <SEOManager 
               title="Organizacija Proslava Srbija | Venčanja, Rođendani - SveZaProslavu.rs"
-              description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prostore za 18. rođendan, fotografe i muziku."
+              description="Najveći vodič za organizaciju događaja u Srbiji. Pronađite restorane za svadbe, prospaces za 18. rođendan, fotografe i muziku."
               jsonLd={organizationSchema}
             />
             <Hero 
@@ -272,8 +282,19 @@ function MainContent() {
               <AuthPage initialView={currentView} onNavigate={(v) => handleNavigate(v as ViewType)} />
         )}
 
+        {/* DASHBOARDS */}
         {currentView === 'partner-dashboard' && (
-            <PartnerDashboard onLogout={() => handleNavigate('home')} />
+             authLoading ? (
+                <div className="min-h-screen pt-36 flex flex-col items-center justify-center bg-white">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary border-t-transparent"></div>
+                    <p className="mt-4 text-gray-500 font-medium">Učitavanje vašeg naloga...</p>
+                </div>
+             ) : (
+                // Safe check for role now that authLoading is false
+                currentUser?.role === 'user' 
+                    ? <UserDashboard onLogout={() => handleNavigate('home')} onNavigate={handleNavigate} />
+                    : <PartnerDashboard onLogout={() => handleNavigate('home')} />
+             )
         )}
       </main>
 

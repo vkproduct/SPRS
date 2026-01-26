@@ -2,19 +2,26 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { UserProfile, Vendor } from '../types';
+import { loginUnified, logout as authLogout, getMyVendorProfile } from '../services/authService';
 
 interface AuthContextType {
   currentUser: UserProfile | null;
   vendorProfile: Vendor | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  login: (email: string, pass: string) => Promise<UserProfile>;
+  logout: () => Promise<void>;
+  setProfile: (user: UserProfile) => void; // Helper for manual updates (e.g. after registration)
 }
 
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
   vendorProfile: null,
   loading: true,
-  refreshProfile: async () => {}
+  refreshProfile: async () => {},
+  login: async () => { throw new Error("Context not initialized"); },
+  logout: async () => {},
+  setProfile: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -33,8 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: userDoc, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       
       if (userDoc) {
-        // Map snake_case to CamelCase manually if needed, or rely on loose types if fields match 
-        // (Supabase returns snake_case, our interface expects camelCase for multi-word fields)
         profile = {
              uid: userDoc.uid,
              email: userDoc.email,
@@ -50,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } as UserProfile;
       }
 
-      // 2. Try to get Vendor Profile (if contractor or if profile missing but might be legacy)
+      // 2. Try to get Vendor Profile
       let vendor: Vendor | null = null;
       if (profile?.role === 'contractor' || !profile) {
         const { data: vDoc } = await supabase.from('vendors').select('*').eq('owner_id', uid).maybeSingle();
@@ -58,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (vDoc) {
             vendor = { ...vDoc, ownerId: vDoc.owner_id } as Vendor;
             
-            // Backfill profile if missing (Legacy support)
+            // Backfill profile if missing
             if (!profile) {
                 const { data: { user } } = await supabase.auth.getUser();
                 profile = {
@@ -87,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
     }
 
-    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchUserData(session.user.id).then(() => setLoading(false));
@@ -110,14 +114,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshProfile = async () => {
-    const { data: { user } } = await supabase!.auth.getUser();
+    if (!supabase) return;
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         await fetchUserData(user.id);
     }
   };
 
+  const login = async (email: string, pass: string) => {
+    setLoading(true);
+    try {
+        const profile = await loginUnified(email, pass);
+        setCurrentUser(profile);
+        
+        if (profile.role === 'contractor' || profile.role === 'admin') {
+            const vDoc = await getMyVendorProfile(profile.uid);
+            setVendorProfile(vDoc);
+        }
+        return profile;
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+      await authLogout();
+      setCurrentUser(null);
+      setVendorProfile(null);
+  };
+
+  const setProfile = (user: UserProfile) => {
+      setCurrentUser(user);
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, vendorProfile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ currentUser, vendorProfile, loading, refreshProfile, login, logout, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

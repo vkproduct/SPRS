@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { InputField, AuthButton } from './SharedComponents';
-import { Mail, Lock, Phone, Briefcase, MapPin, ChevronLeft, Building } from 'lucide-react';
+import { Mail, Lock, Phone, Building, ChevronLeft } from 'lucide-react';
 import { validateEmail, validatePhoneRS, registerContractor } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
+import { UserProfile } from '../../types';
 
 interface ContractorRegistrationProps {
   onBack: () => void;
@@ -10,6 +12,7 @@ interface ContractorRegistrationProps {
 }
 
 export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ onBack, onSuccess }) => {
+  const { setProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -63,20 +66,23 @@ export const ContractorRegistration: React.FC<ContractorRegistrationProps> = ({ 
     try {
         const capacityInt = formData.capacity ? parseInt(formData.capacity) : 0;
         
-        await registerContractor(
+        const result = await registerContractor(
             { email: formData.email, password: formData.password },
             { 
               ...formData, 
               capacity: isNaN(capacityInt) ? 0 : capacityInt 
             }
         );
+
+        // Update context with the new user profile
+        setProfile(result.user as UserProfile);
+
         onSuccess();
     } catch (err: any) {
         console.error("Registration error:", err);
         if (err.code === 'auth/email-already-in-use') {
             setError("Nalog sa ovim email-om već postoji.");
         } else if (err.message) {
-            // Show specific Supabase error if available
             setError(`Greška: ${err.message}`);
         } else {
             setError("Došlo je do nepoznate greške. Pokušajte ponovo.");

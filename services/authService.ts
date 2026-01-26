@@ -1,4 +1,5 @@
 
+
 import { supabase } from '../lib/supabase';
 import { Vendor, UserProfile, UserRole } from '../types';
 
@@ -46,6 +47,14 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
   if (authError) throw authError;
   if (!authData.user) throw new Error("Registracija nije uspela.");
 
+  // Check if session exists. If Email Confirmation is enabled in Supabase, session is null.
+  // If session is null, RLS policies might block the insert below unless a Trigger is used.
+  if (!authData.session) {
+      console.warn("User registered but no active session. Email confirmation might be required.");
+      // We return early and let the Database Trigger handle the profile creation if setup,
+      // OR we inform the user to check their email.
+  }
+
   // 2. Create User Profile in Supabase 'users' table
   // MAPPING: camelCase (JS) -> snake_case (DB)
   const userProfilePayload = {
@@ -56,10 +65,10 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
     phone: data.phone,
     role: 'user',
     created_at: new Date().toISOString(),
-    event_date: data.eventDate,
-    event_type: data.eventType,
-    guest_count: data.guestCount,
-    preferences: data.preferences
+    event_date: data.eventDate || null,
+    event_type: data.eventType || null,
+    guest_count: data.guestCount || null,
+    preferences: data.preferences || null
   };
 
   const { error: profileError } = await supabase!
@@ -67,8 +76,14 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
     .insert(userProfilePayload);
 
   // Note: We don't throw on profileError if Auth succeeded, 
-  // because loginUnified can self-heal the profile later.
-  if (profileError) console.error("Profile creation warning:", profileError);
+  // because the Postgres Trigger (if configured) might have already created the user, causing a duplicate key error.
+  if (profileError) {
+      if (profileError.code === '23505') {
+          console.log("Profile already created by trigger.");
+      } else {
+          console.error("Profile creation warning (Check RLS Policies):", profileError);
+      }
+  }
 
   // Return frontend friendly object
   return {
@@ -120,7 +135,12 @@ export const registerContractor = async (
     .from('users')
     .insert(userProfilePayload);
 
-  if (profileError) console.error("User profile warning:", profileError);
+  if (profileError) {
+       // Ignore duplicate key error if trigger handled it
+       if (profileError.code !== '23505') {
+           console.error("User profile warning:", profileError);
+       }
+  }
 
   // 3. Create Vendor Document
   // Use a reliable ID that can be derived or is unique
@@ -168,7 +188,18 @@ export const registerContractor = async (
 
   if (vendorError) throw vendorError;
 
-  return { user: userProfilePayload, vendor: vendorPayload };
+  // Fix: Construct UserProfile for frontend (camelCase)
+  const userProfile: UserProfile = {
+      uid: userProfilePayload.uid,
+      email: userProfilePayload.email,
+      firstName: userProfilePayload.first_name,
+      lastName: userProfilePayload.last_name,
+      phone: userProfilePayload.phone,
+      role: 'contractor',
+      createdAt: userProfilePayload.created_at
+  };
+
+  return { user: userProfile, vendor: vendorPayload };
 };
 
 /**
