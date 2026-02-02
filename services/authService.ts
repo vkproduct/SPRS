@@ -1,5 +1,4 @@
 
-
 import { supabase } from '../lib/supabase';
 import { Vendor, UserProfile, UserRole } from '../types';
 
@@ -323,4 +322,25 @@ export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> =>
         ...v,
         ownerId: v.owner_id
     } as Vendor;
+};
+
+/**
+ * Update User Profile
+ */
+export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
+    if (isMockMode) return true;
+    
+    const dbPayload: any = {};
+    if (data.firstName !== undefined) dbPayload.first_name = data.firstName;
+    if (data.lastName !== undefined) dbPayload.last_name = data.lastName;
+    if (data.phone !== undefined) dbPayload.phone = data.phone;
+    
+    // Allow updating other event fields too
+    if (data.eventDate !== undefined) dbPayload.event_date = data.eventDate;
+    if (data.guestCount !== undefined) dbPayload.guest_count = data.guestCount;
+
+    const { error } = await supabase!.from('users').update(dbPayload).eq('uid', uid);
+    if (error) throw error;
+    
+    return true;
 };

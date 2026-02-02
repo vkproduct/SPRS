@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { updateUserProfile } from '../services/authService';
 import { 
   LogOut, LayoutDashboard, Heart, MessageSquare, Settings, 
-  Calendar, CheckSquare, MapPin, Clock, User 
+  Calendar, CheckSquare, MapPin, Clock, User, Save
 } from 'lucide-react';
 import { Vendor } from '../types';
 
@@ -27,12 +28,52 @@ const MOCK_TASKS = [
 ];
 
 export const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout, onNavigate }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'favorites' | 'inquiries' | 'settings'>('overview');
+  
+  // Settings Form State
+  const [settingsForm, setSettingsForm] = useState({
+      firstName: '',
+      lastName: '',
+      email: ''
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+      if (currentUser) {
+          setSettingsForm({
+              firstName: currentUser.firstName || '',
+              lastName: currentUser.lastName || '',
+              email: currentUser.email || ''
+          });
+      }
+  }, [currentUser]);
 
   const handleLogout = async () => {
     await logout();
     onLogout();
+  };
+
+  const handleSettingsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSettingsForm({ ...settingsForm, [e.target.name]: e.target.value });
+  };
+
+  const handleSaveSettings = async () => {
+      if (!currentUser) return;
+      setSavingSettings(true);
+      try {
+          await updateUserProfile(currentUser.uid, {
+              firstName: settingsForm.firstName,
+              lastName: settingsForm.lastName
+          });
+          await refreshProfile(); // Refresh context to update UI globally
+          alert("Podaci uspešno sačuvani!");
+      } catch (error) {
+          console.error(error);
+          alert("Greška pri čuvanju podataka.");
+      } finally {
+          setSavingSettings(false);
+      }
   };
 
   const getEventLabel = (type?: string) => {
@@ -61,7 +102,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout, onNaviga
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full top-28 bottom-0 z-10">
         <div className="p-6 border-b border-gray-100">
             <div className="font-bold text-lg text-portal-dark truncate">
-                {currentUser?.firstName} {currentUser?.lastName}
+                {currentUser?.firstName || 'Korisnik'} {currentUser?.lastName}
             </div>
             <div className="text-xs text-gray-500 uppercase mt-1 flex items-center gap-1">
                 <User size={12} /> Organizator
@@ -96,7 +137,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout, onNaviga
         {/* Mobile Header */}
         <div className="md:hidden flex justify-between items-center mb-8">
             <div>
-                <h1 className="text-2xl font-bold">{currentUser?.firstName}'s Event</h1>
+                <h1 className="text-2xl font-bold">{currentUser?.firstName || 'Moj'} Događaj</h1>
             </div>
             <button onClick={handleLogout} className="p-2 bg-gray-200 rounded-full text-gray-600"><LogOut size={18} /></button>
         </div>
@@ -267,17 +308,37 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout, onNaviga
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Ime</label>
-                            <input disabled value={currentUser?.firstName || ''} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500" />
+                            <input 
+                                name="firstName"
+                                value={settingsForm.firstName} 
+                                onChange={handleSettingsChange}
+                                className="w-full p-3 bg-white border border-gray-200 rounded-lg text-portal-dark focus:border-primary outline-none" 
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Prezime</label>
-                            <input disabled value={currentUser?.lastName || ''} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500" />
+                            <input 
+                                name="lastName"
+                                value={settingsForm.lastName} 
+                                onChange={handleSettingsChange}
+                                className="w-full p-3 bg-white border border-gray-200 rounded-lg text-portal-dark focus:border-primary outline-none" 
+                            />
                         </div>
                     </div>
                     
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email adresa</label>
-                        <input disabled value={currentUser?.email || ''} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500" />
+                        <input disabled value={settingsForm.email} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500" />
+                    </div>
+
+                    <div className="flex justify-end pt-4 border-t border-gray-100">
+                        <button 
+                            onClick={handleSaveSettings} 
+                            disabled={savingSettings}
+                            className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-rose-600 transition-colors flex items-center gap-2"
+                        >
+                            {savingSettings ? 'Čuvanje...' : <><Save size={16} /> Sačuvaj promene</>}
+                        </button>
                     </div>
 
                     <div className="pt-4 border-t border-gray-100">
@@ -286,7 +347,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout, onNaviga
                             <input type="password" placeholder="Nova lozinka" className="w-full p-3 border border-gray-200 rounded-lg" />
                             <input type="password" placeholder="Potvrdite novu lozinku" className="w-full p-3 border border-gray-200 rounded-lg" />
                             <button className="bg-portal-dark text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition-colors">
-                                Sačuvaj izmene
+                                Sačuvaj lozinku
                             </button>
                          </div>
                     </div>
