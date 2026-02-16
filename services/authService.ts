@@ -47,15 +47,11 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
   if (!authData.user) throw new Error("Registracija nije uspela.");
 
   // Check if session exists. If Email Confirmation is enabled in Supabase, session is null.
-  // If session is null, RLS policies might block the insert below unless a Trigger is used.
   if (!authData.session) {
       console.warn("User registered but no active session. Email confirmation might be required.");
-      // We return early and let the Database Trigger handle the profile creation if setup,
-      // OR we inform the user to check their email.
   }
 
   // 2. Create User Profile in Supabase 'users' table
-  // MAPPING: camelCase (JS) -> snake_case (DB)
   const userProfilePayload = {
     uid: authData.user.id,
     email: data.email,
@@ -74,8 +70,6 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
     .from('users')
     .insert(userProfilePayload);
 
-  // Note: We don't throw on profileError if Auth succeeded, 
-  // because the Postgres Trigger (if configured) might have already created the user, causing a duplicate key error.
   if (profileError) {
       if (profileError.code === '23505') {
           console.log("Profile already created by trigger.");
@@ -84,7 +78,6 @@ export const registerUser = async (data: Omit<UserProfile, 'uid' | 'role' | 'cre
       }
   }
 
-  // Return frontend friendly object
   return {
     uid: authData.user.id,
     ...data,
@@ -102,7 +95,6 @@ export const registerContractor = async (
 ) => {
   if (isMockMode) throw new Error("Supabase nije konfigurisan.");
 
-  // 1. Create Auth User
   const { data: authData, error: authError } = await supabase!.auth.signUp({
     email: loginData.email,
     password: loginData.password,
@@ -111,7 +103,7 @@ export const registerContractor = async (
         first_name: vendorData.contactFirstName,
         last_name: vendorData.contactLastName,
         full_name: `${vendorData.contactFirstName} ${vendorData.contactLastName}`,
-        role: 'contractor' // Metadata fallback
+        role: 'contractor'
       }
     }
   });
@@ -119,7 +111,6 @@ export const registerContractor = async (
   if (authError) throw authError;
   if (!authData.user) throw new Error("Registracija nije uspela.");
 
-  // 2. Create User Profile
   const userProfilePayload = {
     uid: authData.user.id,
     email: loginData.email,
@@ -134,23 +125,13 @@ export const registerContractor = async (
     .from('users')
     .insert(userProfilePayload);
 
-  if (profileError) {
-       // Ignore duplicate key error if trigger handled it
-       if (profileError.code !== '23505') {
-           console.error("User profile warning:", profileError);
-       }
+  if (profileError && profileError.code !== '23505') {
+       console.error("User profile warning:", profileError);
   }
 
-  // 3. Create Vendor Document
-  // Use a reliable ID that can be derived or is unique
   const newVendorId = `partner-${authData.user.id.slice(0, 8)}`;
-  
-  // Prepare default pricing to ensure DB validity or UI safety
-  const defaultPricing = vendorData.type === 'VENUE' 
-    ? { per_person_from: 0 } 
-    : { package_from: 0 };
+  const defaultPricing = vendorData.type === 'VENUE' ? { per_person_from: 0 } : { package_from: 0 };
 
-  // Mapping to DB Columns
   const vendorPayload: any = {
     id: newVendorId,
     owner_id: authData.user.id,
@@ -162,16 +143,13 @@ export const registerContractor = async (
     city: vendorData.city || 'Srbija',
     address: vendorData.address || 'Online',
     description: vendorData.description,
-    cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80', // Default
+    cover_image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80',
     gallery: [],
     rating: 0,
     reviews_count: 0,
     price_range_symbol: '€€',
     features: [],
-    contact: {
-      email: loginData.email,
-      phone: vendorData.phone
-    },
+    contact: { email: loginData.email, phone: vendorData.phone },
     pricing: defaultPricing,
     ...(vendorData.type === 'VENUE' ? {
         venue_type: vendorData.venueType || 'Restoran',
@@ -187,7 +165,6 @@ export const registerContractor = async (
 
   if (vendorError) throw vendorError;
 
-  // Fix: Construct UserProfile for frontend (camelCase)
   const userProfile: UserProfile = {
       uid: userProfilePayload.uid,
       email: userProfilePayload.email,
@@ -205,18 +182,17 @@ export const registerContractor = async (
  * Unified Login with Role Discovery
  */
 export const loginUnified = async (email: string, pass: string) => {
+  const normalizedEmail = email.toLowerCase().trim();
+
   if (isMockMode) {
-      // Simulation
       await new Promise(r => setTimeout(r, 800));
-      
-      // Determine Mock Role
       let mockRole: UserRole = 'user';
-      if (email === 'admin@svezaproslavu.rs') mockRole = 'admin';
-      else if (email.includes('partner')) mockRole = 'contractor';
+      if (normalizedEmail === 'admin@svezaproslavu.rs') mockRole = 'admin';
+      else if (normalizedEmail.includes('partner')) mockRole = 'contractor';
 
       return { 
           uid: 'mock-123', 
-          email, 
+          email: normalizedEmail, 
           firstName: mockRole === 'admin' ? 'Admin' : 'Mock', 
           lastName: 'User', 
           role: mockRole
@@ -225,24 +201,42 @@ export const loginUnified = async (email: string, pass: string) => {
 
   // 1. Supabase Auth Login
   const { data: authData, error: authError } = await supabase!.auth.signInWithPassword({
-    email,
+    email: normalizedEmail,
     password: pass
   });
 
-  if (authError) throw authError;
+  if (authError) throw authError; // This throws if email/pass wrong OR email not confirmed
   const user = authData.user;
   if (!user) throw new Error("Prijavljivanje nije uspelo.");
 
-  // 2. Determine Role
-  // First check 'users' table
-  const { data: userRow, error: userError } = await supabase!
+  // --- FORCE ADMIN ROLE FOR SPECIFIC EMAIL ---
+  const isAdminEmail = normalizedEmail === 'admin@svezaproslavu.rs';
+
+  if (isAdminEmail) {
+      // Force update or insert admin profile to guarantee access
+      const adminProfile = {
+          uid: user.id,
+          email: normalizedEmail,
+          first_name: 'Admin',
+          last_name: 'Superuser',
+          role: 'admin',
+          created_at: new Date().toISOString()
+      };
+      
+      // Upsert into users table (Auto-fixes permissions if they were wrong)
+      await supabase!.from('users').upsert(adminProfile);
+      
+      return { ...adminProfile, role: 'admin' as UserRole };
+  }
+
+  // 2. Fetch Existing Profile
+  const { data: userRow } = await supabase!
     .from('users')
     .select('*')
     .eq('uid', user.id)
     .maybeSingle();
 
   if (userRow) {
-      // Map back to CamelCase for frontend
       return {
         uid: userRow.uid,
         email: userRow.email,
@@ -258,20 +252,7 @@ export const loginUnified = async (email: string, pass: string) => {
       } as UserProfile;
   }
 
-  // Fallback 1: Admin check via Email
-  if (email === 'admin@svezaproslavu.rs') { 
-       return {
-          uid: user.id,
-          email,
-          firstName: 'Admin',
-          lastName: '',
-          phone: '',
-          role: 'admin',
-          createdAt: new Date().toISOString()
-      } as UserProfile;
-  }
-
-  // Fallback 2: Check for Vendor existence to infer role
+  // Fallback: Check for Vendor existence to infer role
   const { data: vendorData } = await supabase!
     .from('vendors')
     .select('*')
@@ -280,11 +261,10 @@ export const loginUnified = async (email: string, pass: string) => {
 
   const inferredRole = vendorData ? 'contractor' : (user.user_metadata?.role || 'user');
 
-  // SELF HEALING: Create default profile if missing from 'users' table
-  // This happens if registration inserts failed but Auth succeeded
+  // Create missing profile
   const defaultProfilePayload = {
       uid: user.id,
-      email: email,
+      email: normalizedEmail,
       first_name: user.user_metadata?.first_name || 'Korisnik',
       last_name: user.user_metadata?.last_name || '',
       role: inferredRole,
@@ -309,9 +289,6 @@ export const logout = async () => {
     return await supabase!.auth.signOut();
 };
 
-/**
- * Get Contractor Profile details
- */
 export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> => {
     if (isMockMode) return null;
     const { data, error } = await supabase!
@@ -322,17 +299,10 @@ export const getMyVendorProfile = async (uid: string): Promise<Vendor | null> =>
     
     if (error || !data) return null;
     
-    // Map snake_case to CamelCase
     const v = data;
-    return {
-        ...v,
-        ownerId: v.owner_id
-    } as Vendor;
+    return { ...v, ownerId: v.owner_id } as Vendor;
 };
 
-/**
- * Update User Profile
- */
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
     if (isMockMode) return true;
     
@@ -340,8 +310,6 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
     if (data.firstName !== undefined) dbPayload.first_name = data.firstName;
     if (data.lastName !== undefined) dbPayload.last_name = data.lastName;
     if (data.phone !== undefined) dbPayload.phone = data.phone;
-    
-    // Allow updating other event fields too
     if (data.eventDate !== undefined) dbPayload.event_date = data.eventDate;
     if (data.guestCount !== undefined) dbPayload.guest_count = data.guestCount;
 

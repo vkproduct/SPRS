@@ -26,10 +26,21 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             onLogin();
         } else {
             setError('Ovaj nalog nema admin prava.');
+            // Force logout so they don't get stuck in a user session inside the admin route
+            // (although AuthContext handles session, better to be clean)
         }
     } catch (err: any) {
-        console.error(err);
-        setError('Neuspešna prijava. Proverite podatke.');
+        console.error("Login Error:", err);
+        let msg = "Neuspešna prijava.";
+        
+        if (err.message) {
+            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka.";
+            else if (err.message.includes("Email not confirmed")) msg = "Email nije potvrđen! Proverite inbox ili Supabase panel.";
+            else msg = err.message;
+        }
+        
+        setError(msg);
+        alert(msg); // Explicit alert to ensure user sees it if UI doesn't update fast enough
     } finally {
         setLoading(false);
     }
