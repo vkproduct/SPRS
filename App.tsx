@@ -292,7 +292,7 @@ function MainContent() {
              ) : (
                 // Safe check for role now that authLoading is false
                 currentUser?.role === 'user' 
-                    ? <UserDashboard onLogout={() => handleNavigate('home')} onNavigate={handleNavigate} />
+                    ? <UserDashboard onLogout={() => handleNavigate('home')} onNavigate={(v) => handleNavigate(v as ViewType)} />
                     : <PartnerDashboard onLogout={() => handleNavigate('home')} />
              )
         )}
