@@ -199,6 +199,9 @@ export const loginUnified = async (email: string, pass: string) => {
       } as UserProfile;
   }
 
+  // Ensure clean slate before sign in attempts to avoid session conflicts
+  await supabase!.auth.signOut().catch(() => {}); 
+
   // 1. Supabase Auth Login
   const { data: authData, error: authError } = await supabase!.auth.signInWithPassword({
     email: normalizedEmail,
@@ -223,14 +226,12 @@ export const loginUnified = async (email: string, pass: string) => {
           created_at: new Date().toISOString()
       };
       
-      // Upsert into users table (Auto-fixes permissions if they were wrong)
-      // We await this, but if it fails (RLS), we still return admin role for the session
-      const { error: upsertError } = await supabase!.from('users').upsert(adminProfile);
-      
-      if (upsertError) {
-          console.error("Admin profile upsert warning (RLS might be blocking):", upsertError);
-          // We continue anyway, because AuthContext also has a hardcoded check
-      }
+      // CRITICAL FIX: Do NOT await this. If DB is locked/paused/RLS-blocked, 
+      // we don't want the login UI to hang. We know it's admin, so we proceed in-memory.
+      // The AuthContext will handle state consistency.
+      supabase!.from('users').upsert(adminProfile).then(({ error }) => {
+          if (error) console.error("Background Admin profile upsert failed (non-critical):", error);
+      });
       
       return { 
           uid: adminProfile.uid,
@@ -285,7 +286,10 @@ export const loginUnified = async (email: string, pass: string) => {
       created_at: new Date().toISOString()
   };
   
-  await supabase!.from('users').upsert(defaultProfilePayload);
+  // Non-blocking upsert for regular users too, to speed up login
+  supabase!.from('users').upsert(defaultProfilePayload).then(({error}) => {
+       if (error) console.error("Background User profile create failed:", error);
+  });
   
   return {
       uid: defaultProfilePayload.uid,

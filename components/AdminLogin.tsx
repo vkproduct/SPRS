@@ -20,27 +20,32 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     setError('');
 
     try {
-        const user = await login(email, password);
+        // Race the login promise against a timeout to prevent infinite hanging
+        // if DB connections are stalled.
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Vreme za prijavu je isteklo. Proverite internet konekciju.")), 15000)
+        );
+
+        const loginPromise = login(email, password);
+        
+        const user: any = await Promise.race([loginPromise, timeoutPromise]);
         
         if (user.role === 'admin') {
             onLogin();
         } else {
             setError('Ovaj nalog nema admin prava.');
-            // Force logout so they don't get stuck in a user session inside the admin route
-            // (although AuthContext handles session, better to be clean)
         }
     } catch (err: any) {
         console.error("Login Error:", err);
         let msg = "Neuspešna prijava.";
         
         if (err.message) {
-            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka. Da li ste registrovali ovaj nalog?";
-            else if (err.message.includes("Email not confirmed")) msg = "Email nije potvrđen! Proverite inbox ili Supabase panel.";
+            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka.";
+            else if (err.message.includes("Email not confirmed")) msg = "Email nije potvrđen! Proverite inbox.";
             else msg = err.message;
         }
         
         setError(msg);
-        alert(msg); // Explicit alert to ensure user sees it if UI doesn't update fast enough
     } finally {
         setLoading(false);
     }
