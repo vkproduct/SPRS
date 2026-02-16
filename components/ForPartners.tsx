@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { CheckCircle, TrendingUp, Calendar, DollarSign, Star, Shield, Users, ChevronDown, ChevronUp, ArrowRight, X, Gift, BarChart3, Search, Zap, Check, AlertCircle } from 'lucide-react';
-import { ViewType } from '../types';
+import { ViewType } from '../App';
 import { SEOManager } from './SEOManager';
 
 interface ForPartnersProps {

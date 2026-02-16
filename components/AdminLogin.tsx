@@ -20,15 +20,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     setError('');
 
     try {
-        // Race the login promise against a timeout to prevent infinite hanging
-        // if DB connections are stalled.
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Vreme za prijavu je isteklo. Proverite internet konekciju.")), 15000)
-        );
-
-        const loginPromise = login(email, password);
-        
-        const user: any = await Promise.race([loginPromise, timeoutPromise]);
+        const user = await login(email, password);
         
         if (user.role === 'admin') {
             onLogin();
@@ -36,16 +28,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             setError('Ovaj nalog nema admin prava.');
         }
     } catch (err: any) {
-        console.error("Login Error:", err);
-        let msg = "Neuspešna prijava.";
-        
-        if (err.message) {
-            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka.";
-            else if (err.message.includes("Email not confirmed")) msg = "Email nije potvrđen! Proverite inbox.";
-            else msg = err.message;
-        }
-        
-        setError(msg);
+        console.error(err);
+        setError('Neuspešna prijava. Proverite podatke.');
     } finally {
         setLoading(false);
     }

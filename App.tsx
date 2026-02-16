@@ -16,7 +16,7 @@ import { PartnerDashboard } from './components/PartnerDashboard';
 import { UserDashboard } from './components/UserDashboard';
 import { GoodsCategories } from './components/GoodsCategories';
 import { SEOManager } from './components/SEOManager'; 
-import { Vendor, ViewType } from './types';
+import { Vendor } from './types';
 import { supabase } from './lib/supabase';
 import { getSiteContent } from './services/vendorService';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -30,6 +30,8 @@ const AdminPanel = React.lazy(() =>
       return { default: () => <div className="p-20 text-center text-red-600 font-bold">Greška pri učitavanju modula. Proverite konzolu.</div> };
     })
 );
+
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel' | 'login' | 'register';
 
 function MainContent() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -272,12 +274,12 @@ function MainContent() {
 
         {/* Legacy Partner Auth Route */}
         {currentView === 'partner-auth' && (
-              <AuthPage initialView="login" onNavigate={handleNavigate} />
+              <AuthPage initialView="login" onNavigate={(v) => handleNavigate(v as ViewType)} />
         )}
 
         {/* NEW AUTH ROUTES */}
         {(currentView === 'login' || currentView === 'register') && (
-              <AuthPage initialView={currentView} onNavigate={handleNavigate} />
+              <AuthPage initialView={currentView} onNavigate={(v) => handleNavigate(v as ViewType)} />
         )}
 
         {/* DASHBOARDS */}

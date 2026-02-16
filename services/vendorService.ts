@@ -44,11 +44,7 @@ export const getVendors = async (filterType?: VendorType, categoryId?: string): 
         throw error;
     }
 
-    // DEBUG: Help user understand why list is empty
     if (!data || data.length === 0) {
-        console.log("Supabase returned 0 vendors. Check if table is empty or RLS policies block access.");
-        // We DO NOT fallback to local data here, because if DB is connected but empty, 
-        // we should show empty state, not mix local data.
         return [];
     }
 
@@ -151,8 +147,6 @@ export const addVendorsBatch = async (vendorsData: Omit<Vendor, 'id'>[]) => {
             ...v,
             owner_id: v.ownerId,
             venue_type: (v as any).venue_type,
-            service_type: (v as any).service_type,
-            product_type: (v as any).product_type
             // ensure other fields are present and mapped
         }));
         
@@ -359,7 +353,6 @@ export const seedDatabase = async () => {
             console.error("Seed error:", error);
         } else {
             console.log(`Seeding complete. Uploaded ${localVendors.length} vendors.`);
-            alert(`Uspešno učitano ${localVendors.length} venova u bazu! Osvežite stranicu.`);
         }
     } catch (e) {
         console.error("Seed exception:", e);
