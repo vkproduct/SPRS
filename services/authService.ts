@@ -224,7 +224,13 @@ export const loginUnified = async (email: string, pass: string) => {
       };
       
       // Upsert into users table (Auto-fixes permissions if they were wrong)
-      await supabase!.from('users').upsert(adminProfile);
+      // We await this, but if it fails (RLS), we still return admin role for the session
+      const { error: upsertError } = await supabase!.from('users').upsert(adminProfile);
+      
+      if (upsertError) {
+          console.error("Admin profile upsert warning (RLS might be blocking):", upsertError);
+          // We continue anyway, because AuthContext also has a hardcoded check
+      }
       
       return { 
           uid: adminProfile.uid,

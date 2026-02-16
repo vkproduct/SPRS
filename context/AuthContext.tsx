@@ -40,13 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: userDoc, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       
       if (userDoc) {
+        // --- SAFETY NET: Force Admin Role for specific email ---
+        // This prevents the DB state from overwriting the hardcoded admin logic
+        // in case of race conditions or RLS failures.
+        const isAdminEmail = userDoc.email?.toLowerCase().trim() === 'admin@svezaproslavu.rs';
+        
         profile = {
              uid: userDoc.uid,
              email: userDoc.email,
              firstName: userDoc.first_name,
              lastName: userDoc.last_name,
              phone: userDoc.phone,
-             role: userDoc.role,
+             role: isAdminEmail ? 'admin' : userDoc.role, // FORCE ADMIN
              createdAt: userDoc.created_at,
              eventDate: userDoc.event_date,
              eventType: userDoc.event_type,
