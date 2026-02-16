@@ -34,7 +34,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         let msg = "Neuspešna prijava.";
         
         if (err.message) {
-            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka.";
+            if (err.message.includes("Invalid login credentials")) msg = "Pogrešan email ili lozinka. Da li ste registrovali ovaj nalog?";
             else if (err.message.includes("Email not confirmed")) msg = "Email nije potvrđen! Proverite inbox ili Supabase panel.";
             else msg = err.message;
         }
