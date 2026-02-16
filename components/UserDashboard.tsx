@@ -6,11 +6,11 @@ import {
   LogOut, LayoutDashboard, Heart, MessageSquare, Settings, 
   Calendar, CheckSquare, MapPin, Clock, User, Save
 } from 'lucide-react';
-import { Vendor } from '../types';
+import { ViewType } from '../types';
 
 interface UserDashboardProps {
   onLogout: () => void;
-  onNavigate: (view: string) => void;
+  onNavigate: (view: ViewType) => void;
 }
 
 // Mock Data for UI visualization

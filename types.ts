@@ -1,4 +1,5 @@
 
+
 // Common interfaces
 export interface VendorCategory {
   id: string;
@@ -128,3 +129,6 @@ export interface AuthState {
   vendorProfile: Vendor | null; // If role is contractor
   loading: boolean;
 }
+
+// --- APP NAVIGATION TYPES ---
+export type ViewType = 'home' | 'partners' | 'venues' | 'services' | 'goods-categories' | 'goods-list' | 'venue-details' | 'admin-add' | 'partner-auth' | 'partner-dashboard' | 'admin-login' | 'admin-panel' | 'login' | 'register';

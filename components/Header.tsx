@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, User as UserIcon, Briefcase } from 'lucide-react';
-import { ViewType } from '../App';
+import { ViewType } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {

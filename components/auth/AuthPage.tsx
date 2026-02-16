@@ -5,10 +5,11 @@ import { RoleSelection } from './RoleSelection';
 import { UserRegistration } from './UserRegistration';
 import { ContractorRegistration } from './ContractorRegistration';
 import { X, CheckCircle } from 'lucide-react';
+import { ViewType } from '../../types';
 
 interface AuthPageProps {
   initialView?: 'login' | 'register';
-  onNavigate: (view: string) => void; // Using App.tsx navigation logic
+  onNavigate: (view: ViewType) => void;
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNavigate }) => {
@@ -16,7 +17,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNav
       initialView === 'register' ? 'role_select' : 'login'
   );
   
-  const [successMessage, setSuccessMessage] = useState({ title: '', text: '', btnText: '', target: '' });
+  const [successMessage, setSuccessMessage] = useState({ title: '', text: '', btnText: '', target: '' as ViewType });
 
   const handleLoginSuccess = (role: string) => {
     // Redirect logic based on role
@@ -36,7 +37,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialView = 'login', onNav
             ? 'Vaš nalog je kreiran. Dobrodošli u vaš lični planer.'
             : 'Vaš biznis nalog je kreiran. Dobrodošli u partner mrežu.',
           btnText: 'Idi u Lični Kabinet',
-          target: 'partner-dashboard' // Always go to dashboard
+          target: 'partner-dashboard'
       });
       setView('success');
   };
