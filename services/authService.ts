@@ -226,7 +226,15 @@ export const loginUnified = async (email: string, pass: string) => {
       // Upsert into users table (Auto-fixes permissions if they were wrong)
       await supabase!.from('users').upsert(adminProfile);
       
-      return { ...adminProfile, role: 'admin' as UserRole };
+      return { 
+          uid: adminProfile.uid,
+          email: adminProfile.email,
+          firstName: adminProfile.first_name,
+          lastName: adminProfile.last_name,
+          role: 'admin' as UserRole,
+          createdAt: adminProfile.created_at,
+          phone: ''
+      };
   }
 
   // 2. Fetch Existing Profile
