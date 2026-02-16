@@ -11,7 +11,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
   login: (email: string, pass: string) => Promise<UserProfile>;
   logout: () => Promise<void>;
-  setProfile: (user: UserProfile) => void; // Helper for manual updates (e.g. after registration)
+  setProfile: (user: UserProfile) => void; 
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,45 +35,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!supabase) return;
 
     try {
-      // 1. Try to get User Profile
+      // 0. Get Auth User details first (Reliable source of truth for email)
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const currentEmail = authUser?.email?.toLowerCase().trim();
+      const isAdminEmail = currentEmail === 'admin@svezaproslavu.rs';
+
+      // 1. Try to get User Profile from DB
       let profile: UserProfile | null = null;
-      const { data: userDoc, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
+      const { data: userDoc } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       
       if (userDoc) {
-        // --- SAFETY NET: Force Admin Role for specific email ---
-        // This prevents the DB state from overwriting the hardcoded admin logic
-        // in case of race conditions or RLS failures.
-        const isAdminEmail = userDoc.email?.toLowerCase().trim() === 'admin@svezaproslavu.rs';
-        
+        // DB Profile found
         profile = {
              uid: userDoc.uid,
              email: userDoc.email,
              firstName: userDoc.first_name,
              lastName: userDoc.last_name,
              phone: userDoc.phone,
-             role: isAdminEmail ? 'admin' : userDoc.role, // FORCE ADMIN
+             // SAFETY NET: Force admin role if email matches, regardless of DB role
+             role: isAdminEmail ? 'admin' : userDoc.role, 
              createdAt: userDoc.created_at,
              eventDate: userDoc.event_date,
              eventType: userDoc.event_type,
              guestCount: userDoc.guest_count,
              preferences: userDoc.preferences
         } as UserProfile;
+      } else if (isAdminEmail && authUser) {
+          // DB Profile NOT found, but is Admin Email -> Create In-Memory Admin Profile
+          // This allows login even if DB 'users' table is empty/broken/RLS-blocked
+          console.warn("Admin profile missing in DB. Using in-memory fallback.");
+          profile = {
+              uid: authUser.id,
+              email: currentEmail!,
+              firstName: 'Admin',
+              lastName: 'Superuser',
+              phone: '',
+              role: 'admin',
+              createdAt: new Date().toISOString()
+          };
       }
 
-      // 2. Try to get Vendor Profile
+      // 2. Try to get Vendor Profile (if not admin)
       let vendor: Vendor | null = null;
-      if (profile?.role === 'contractor' || !profile) {
+      
+      // If we still don't have a profile (regular user missing in DB), or if it's a contractor
+      if (!profile || profile.role === 'contractor') {
         const { data: vDoc } = await supabase.from('vendors').select('*').eq('owner_id', uid).maybeSingle();
         
         if (vDoc) {
             vendor = { ...vDoc, ownerId: vDoc.owner_id } as Vendor;
             
-            // Backfill profile if missing
-            if (!profile) {
-                const { data: { user } } = await supabase.auth.getUser();
+            // Backfill profile if missing (Contractor found in vendors table but not users table)
+            if (!profile && authUser) {
                 profile = {
-                    uid,
-                    email: user?.email || '',
+                    uid: authUser.id,
+                    email: authUser.email || '',
                     firstName: vendor.name,
                     lastName: '',
                     phone: vendor.contact.phone,
@@ -82,6 +98,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
             }
         }
+      }
+
+      // 3. Final Fallback for regular users missing in DB (e.g. RLS blocked insert on signup)
+      if (!profile && authUser) {
+          // Check metadata for role
+          const metaRole = authUser.user_metadata?.role || 'user';
+          profile = {
+              uid: authUser.id,
+              email: authUser.email || '',
+              firstName: authUser.user_metadata?.first_name || 'Korisnik',
+              lastName: authUser.user_metadata?.last_name || '',
+              phone: '',
+              role: metaRole,
+              createdAt: new Date().toISOString()
+          };
       }
 
       setCurrentUser(profile);
@@ -97,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
     }
 
+    // Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchUserData(session.user.id).then(() => setLoading(false));
@@ -105,8 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        // We await this to ensure state is consistent
         await fetchUserData(session.user.id);
       } else {
         setCurrentUser(null);
@@ -130,6 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
         const profile = await loginUnified(email, pass);
+        // We set state immediately for responsiveness
         setCurrentUser(profile);
         
         if (profile.role === 'contractor' || profile.role === 'admin') {
