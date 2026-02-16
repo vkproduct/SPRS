@@ -208,12 +208,18 @@ export const loginUnified = async (email: string, pass: string) => {
   if (isMockMode) {
       // Simulation
       await new Promise(r => setTimeout(r, 800));
+      
+      // Determine Mock Role
+      let mockRole: UserRole = 'user';
+      if (email === 'admin@svezaproslavu.rs') mockRole = 'admin';
+      else if (email.includes('partner')) mockRole = 'contractor';
+
       return { 
           uid: 'mock-123', 
           email, 
-          firstName: 'Mock', 
+          firstName: mockRole === 'admin' ? 'Admin' : 'Mock', 
           lastName: 'User', 
-          role: email.includes('partner') ? 'contractor' : 'user' 
+          role: mockRole
       } as UserProfile;
   }
 
